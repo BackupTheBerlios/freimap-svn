@@ -11,41 +11,44 @@ Until then, here's a small outlook of what you can get running and how.
 
 * Java 1.5.0 (Java2) or better.
 * Either 
-  - Olsrd running with the dot_draw plugin in the network
-  - A database containing topology data, according to the provided SQL 
-    structure. 
-* A few, rather common java libraries which are also provided in a separate
-  convenience package
-  - jFreeChart (1.0.4 checked) and jCommon (1.0.8 checked) from jfree.org
-  - Mysql J/Connector if database access is used (version 5.0.5 checked)
+** Olsrd running with the dot_draw plugin in the network
+** A database containing topology data, according to the provided SQL structure. 
+* A few, rather common java libraries which are also provided in a separate convenience package
+*# jFreeChart (1.0.4 checked) and jCommon (1.0.8 checked) from jfree.org
+*# Mysql J/Connector if database access is used (version 5.0.5 checked)
 
 == Installation == 
 
 === from convenience JAR archive ===
 
-Assuming that you have the file freimap-*.jar in a convenient location.
-* unzip freimap-all-*.jar lib
-  (will create a ./lib subfolder and extract libraries)
+Assuming that you have the file freimap-all-*.jar in a convenient location.
+
+ > unzip freimap-all-*.jar lib/*
+:(will create a ./lib subfolder and extract libraries)
+
 You're done. 
 
-=== Compile from source === 
+=== Compile from source jar archive === 
 
-* mkdir freimap
+ > mkdir freimap
 * Copy the jar file into this folder. 
-* jar xvf freimap-dev-*.jar 
-  (will create many a subfolder)
-* ./compile 
-  (should compile the necessary files with a well-defined classpath, and 
-   create a jar file freimap-jar. If not, you'll have to adjust the file)
+ > jar xvf freimap-dev-*.jar 
+:(will create many a subfolder)
+ > ./compile 
+:(should compile the necessary files with a well-defined classpath, and create a jar file freimap.jar. If not, you'll have to adjust the file)
 
+=== Get the latest from SVN ===
+
+* Follow the instructions at http://developer.berlios.de/svn/?group_id=8309 to obtain an up-to date source tree.
+ > ./compile
 
 == Running freimap ==
 
-By now, you should have the file freimap-*.jar and a lib subfolder.
+By now, you should have the file freimap*.jar and a lib subfolder.
 
-* ./run 
+ > ./run 
 or 
-* java -Xmx500m -jar freimap-*.jar
+ > java -Xmx500m -jar freimap-*.jar
 
 If you have got less than 500mb free memory, you may want to adjust the 
 -Xmx parameter. Freimap does not necessarily need that much unless you 
@@ -70,3 +73,4 @@ Enjoy!
 
 Comments and bug reports are welcome. Either use the Bug reporting system 
 at http://freimap.berlios.de or contact me at the address above.
+
