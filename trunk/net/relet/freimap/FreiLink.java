@@ -35,6 +35,9 @@ public class FreiLink {
     this.etx=etx;
     this.HNA=HNA;
   }
+  public int hashCode() {
+    return from.hashCode() ^ to.hashCode();
+  }
   public boolean equals(Object o) {
     if (!(o instanceof FreiLink)) return false;
     FreiLink other=(FreiLink)o;

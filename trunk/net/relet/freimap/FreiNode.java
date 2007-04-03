@@ -45,6 +45,11 @@ public class FreiNode implements Comparable, Serializable {
     this.lon=lon;
     this.lat=lat;
   }
+
+  public int hashCode() {
+    return id.hashCode();
+  }
+
   public int compareTo(Object o) {
     return id.compareTo(((FreiNode)o).id);
   }

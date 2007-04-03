@@ -158,14 +158,14 @@ public class VisorFrame extends JPanel implements DataSourceListener, ComponentL
   public void nodeListUpdate(FreiNode node) {
     nodes.add(node);
     
-    /*try {
+    try {
       ObjectOutputStream oos=new ObjectOutputStream(new FileOutputStream("nodes.dump"));
       oos.writeObject(nodes);
       oos.flush();
       oos.close();
     } catch (Exception ex) {
       ex.printStackTrace();
-    } */
+    } 
   }
   
   public Dimension getPreferredSize() {

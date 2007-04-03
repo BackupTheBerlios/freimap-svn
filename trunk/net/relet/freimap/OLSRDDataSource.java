@@ -145,8 +145,23 @@ public class OLSRDDataSource implements DataSource {
     }
     info.setLinkCountProfile(lcp);
   }
-  public void getLinkProfile(FreiLink link, LinkInfo info) {
-    //todo
+  public void getLinkProfile(FreiLink mylink, LinkInfo info) {
+    LinkedList<LinkData> lp=new LinkedList<LinkData>();
+    //select HIGH_PRIORITY unix_timestamp(clock) as time, quality from "+TABLE_LINKS+" where src='"+link.from.id+"' and dest='"+link.to.id+"'");
+    Iterator <Long> times=data.keySet().iterator();
+    while (times.hasNext()) {
+      Long time=times.next();
+      Vector<FreiLink> links=data.get(time);
+      float quality=0;
+      for (int i=0; i<links.size(); i++) {
+        FreiLink link=links.elementAt(i);
+        if (link.equals(mylink)) {
+          quality=link.etx;
+        }
+      }
+      lp.add(new LinkData(time.longValue(), quality));
+    }
+    info.setLinkProfile(lp);
   }
 
   //private methods
