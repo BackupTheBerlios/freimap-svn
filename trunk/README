@@ -1,0 +1,72 @@
+This is freimap release alpha-1.
+Licence is GPL. Copyleft by Thomas Hirsch <thomas hirsch gmail com>
+
+Freimap is a visualization environment for community mesh networks with
+an OLSR infrastructure. Think "freifunk.net". 
+
+Documentation of the project is still expected to fall from the sky. 
+Until then, here's a small outlook of what you can get running and how.
+
+== Requirements ==
+
+* Java 1.5.0 (Java2) or better.
+* Either 
+  - Olsrd running with the dot_draw plugin in the network
+  - A database containing topology data, according to the provided SQL 
+    structure. 
+* A few, rather common java libraries which are also provided in a separate
+  convenience package
+  - jFreeChart (1.0.4 checked) and jCommon (1.0.8 checked) from jfree.org
+  - Mysql J/Connector if database access is used (version 5.0.5 checked)
+
+== Installation == 
+
+=== from convenience JAR archive ===
+
+Assuming that you have the file freimap-*.jar in a convenient location.
+* unzip freimap-*.jar lib
+  (will create a ./lib subfolder and extract libraries)
+You're done. 
+
+=== Compile from source === 
+
+* mkdir freimap
+* Copy the jar file into this folder. 
+* jar xvf freimap-dev-*.jar 
+  (will create many a subfolder)
+* ./compile 
+  (should compile the necessary files with a well-defined classpath, and 
+   create a jar file freimap-jar. If not, you'll have to adjust the file)
+
+
+== Running freimap ==
+
+By now, you should have the file freimap-*.jar and a lib subfolder.
+
+* ./run 
+or 
+* java -Xmx500m -jar freimap.jar
+
+If you have got less than 500mb free memory, you may want to adjust the 
+-Xmx parameter. Freimap does not necessarily need that much unless you 
+evaluate many months of collected data using the MysqlDataSource. 
+
+If no configuration file is present, freimap will create such a file and 
+abort, so that you can adjust its setting. The configuration file defaults 
+to listening at localhost, port 2004 to any OLSRD dot_draw plugin. 
+
+
+== Using freimap ==
+
+You need geo-information for your network. Currently, this can be read 
+either from a Mysql Database, or from a nodes.dump file in the jar package. 
+The latter however only provides this data for nodes in the Berlin network 
+currently. Importing from other sources is on my to do list, suggestions 
+are welcome. 
+
+... (to be continued).
+
+Enjoy! 
+
+Comments and bug reports are welcome. Either use the Bug reporting system 
+at http://freimap.berlios.de or contact me at the address above.
