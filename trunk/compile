@@ -1,0 +1,1 @@
+javac -classpath .:lib/mysql-connector-java-5.0.5-bin.jar:lib/jfreechart-1.0.4.jar:lib/jcommon-1.0.8.jar -Xlint:unchecked  net/relet/freimap/Visor.java net/relet/freimap/OLSRDDataSource.java net/relet/freimap/MysqlDataSource.java && ( rm freimap.jar ; jar cvfm freimap.jar META-INF/MANIFEST.MF LICENCE README  net/relet/freimap/*.class gfx/*.* data/*.* )

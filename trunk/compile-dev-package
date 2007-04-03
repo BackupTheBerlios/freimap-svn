@@ -1,0 +1,1 @@
+javac -classpath .:lib/jfreechart-1.0.4.jar:lib/jcommon-1.0.8.jar -Xlint:unchecked  net/relet/freimap/Visor.java && ( rm freimap-dev.jar ; jar cvfm freimap-dev.jar META-INF/MANIFEST.MF LICENCE README net/relet/freimap/*.java gfx/*.* data/*.* compile compile-dev-package compile-convenience-package run)

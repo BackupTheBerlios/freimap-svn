@@ -24,7 +24,7 @@ Until then, here's a small outlook of what you can get running and how.
 === from convenience JAR archive ===
 
 Assuming that you have the file freimap-*.jar in a convenient location.
-* unzip freimap-*.jar lib
+* unzip freimap-all-*.jar lib
   (will create a ./lib subfolder and extract libraries)
 You're done. 
 
@@ -45,7 +45,7 @@ By now, you should have the file freimap-*.jar and a lib subfolder.
 
 * ./run 
 or 
-* java -Xmx500m -jar freimap.jar
+* java -Xmx500m -jar freimap-*.jar
 
 If you have got less than 500mb free memory, you may want to adjust the 
 -Xmx parameter. Freimap does not necessarily need that much unless you 
