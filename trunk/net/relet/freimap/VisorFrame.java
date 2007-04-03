@@ -68,6 +68,7 @@ public class VisorFrame extends JPanel implements DataSourceListener, ComponentL
   ImageIcon logo2  = new ImageIcon(getClass().getResource("/gfx/logo2.png"));
   ImageIcon play   = new ImageIcon(getClass().getResource("/gfx/play.png"));
   ImageIcon stop   = new ImageIcon(getClass().getResource("/gfx/stop.png"));
+  double cscale = 40000; 
   double clat = 52.520869, //cbase center coordinates
          clon = 13.409457;
 
@@ -157,7 +158,7 @@ public class VisorFrame extends JPanel implements DataSourceListener, ComponentL
   public void nodeListUpdate(FreiNode node) {
     nodes.add(node);
     
-/*    try {
+    /*try {
       ObjectOutputStream oos=new ObjectOutputStream(new FileOutputStream("nodes.dump"));
       oos.writeObject(nodes);
       oos.flush();
@@ -224,11 +225,11 @@ public class VisorFrame extends JPanel implements DataSourceListener, ComponentL
 
     //draw bg
     //todo !! fix position + scale of berlin map
-    double cbasexc = lon2x(clon) - 358d*scale/13000; 
-    double cbaseyc = lat2y(clat) - 358d*scale/13000;
+    double cbasexc = lon2x(clon) - 358d*scale/cscale; 
+    double cbaseyc = lat2y(clat) - 358d*scale/cscale;
     //double berlinxc = (13.22000 - x) * scale + cx; 
     //double berlinyc = (52.68472 - y) * -scale + cy;
-    g.drawImage(cbase.getImage(), new AffineTransform(scale/13000,0d,0d,scale/13000,cbasexc,cbaseyc), this);
+    g.drawImage(cbase.getImage(), new AffineTransform(scale/cscale,0d,0d,scale/cscale,cbasexc,cbaseyc), this);
     //g.drawImage(berlin.getImage(), new AffineTransform(scale/7500,0d,0d,scale/7500,berlinxc,berlinyc), this);
 
     //draw links
@@ -306,7 +307,7 @@ public class VisorFrame extends JPanel implements DataSourceListener, ComponentL
           g.setColor(new Color(1.0f-avail, avail, 0.5f));
         }
       }
-      double nsize = Math.min(15,Math.round(0.0003 * scale));
+      double nsize = Math.max(1,Math.min(15,Math.round(0.0003 * scale)));
       double nx = lon2x(node.lon) - nsize/2,
              ny = lat2y(node.lat) - nsize/2;
              
