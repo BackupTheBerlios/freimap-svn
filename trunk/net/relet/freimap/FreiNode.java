@@ -1,4 +1,4 @@
-/* net.relet.freimap.FreiNode.java 
+/* net.relet.freimap.FreiNode.java
 
   This file is part of the freimap software available at freimap.berlios.de
 
@@ -11,13 +11,13 @@
 
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
   GNU General Public License for more details.
 
   You should have received a copy of the GNU General Public License with
   the Debian GNU/Linux distribution in file /doc/gpl.txt
   if not, write to the Free Software Foundation, Inc., 59 Temple Place,
-  Suite 330, Boston, MA  02111-1307  USA
+  Suite 330, Boston, MA 02111-1307 USA
 */
 
 package net.relet.freimap;
