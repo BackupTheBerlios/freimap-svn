@@ -63,7 +63,7 @@ public class VisorFrame extends JPanel implements DataSourceListener, ComponentL
   DataSource source;
   
   ImageIcon cbase  = new ImageIcon(getClass().getResource("/gfx/cbase.png")); 
-  ImageIcon berlin = new ImageIcon(getClass().getResource("/gfx/berlin.png"));
+  //ImageIcon berlin = new ImageIcon(getClass().getResource("/gfx/berlin.png"));
   ImageIcon logo1  = new ImageIcon(getClass().getResource("/gfx/logo1.png"));
   ImageIcon logo2  = new ImageIcon(getClass().getResource("/gfx/logo2.png"));
   ImageIcon play   = new ImageIcon(getClass().getResource("/gfx/play.png"));
