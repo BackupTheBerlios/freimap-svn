@@ -67,10 +67,29 @@ The latter however only provides this data for nodes in the Berlin network
 currently. Importing from other sources is on my to do list, suggestions 
 are welcome. 
 
-... (to be continued).
+In the main window, you will therefore see a number of white clouds at 
+first. They are the big node concentrations around Berlin and Leipzig. 
+Drag and zoom using your left and right mouse buttons to get closer to 
+the area where you expect to see your network. Press the play button at 
+the bottom of the screen to get live updates and display topology. (If you 
+don't see anything, try to zoom in near Berlin, Alexanderplatz where a big 
+green c-base logo is located. Any node which could not be located is currently 
+placed there - see [[Freimap/Troubleshooting]])
+
+=== Interface ===
+
+The main screen is a map where you can zoom and drag around. Status bars at the top and bottom will tell you about the currently displayed time and the geographical position equivalent to your mouse cursor. 
+
+* Left mouse button: Click and drag to move around the map
+* Right mouse button: Click and drag to zoom in and out
+* Double click left on any place in the screen to center onto that place.
+* Move your mouse over a node or a link to display basic information
+* Right click onto a node or link to display advanced statistics. The displayed graphs require a certain minimum of time samples to be available, so that they may not work until after a certain while. 
+* Click and drag along the time line on the bottom of the screen to display information about another point in time.
+* Click on the play/stop button to display a singe time or move forward within it. 
+* A drop down box at the top left of the screen allows you to center on a certain node. Since there are more than thousand registered nodes, it's not that useful currently. 
 
 Enjoy! 
-
 Comments and bug reports are welcome. Either use the Bug reporting system 
 at http://freimap.berlios.de or contact me at the address above.
 
