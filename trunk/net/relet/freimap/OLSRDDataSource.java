@@ -58,7 +58,6 @@ public class OLSRDDataSource implements DataSource {
     if (useMysqlSource) mysqlSource=new MysqlDataSource("localhost", "root", "", "freiberlin", true);
     //opening dot plugin connection
     dot = new DotPluginListener(host, port, this);
-    dot.start();
   }
   
   public Vector<FreiNode> getNodeList() {
@@ -125,6 +124,7 @@ public class OLSRDDataSource implements DataSource {
   //threaded information fetching
   public void addDataSourceListener(DataSourceListener dsl) {
     listener = dsl;
+    if (!dot.isAlive()) dot.start();
   }
   //some optional methods
   public void getLinkCountProfile(FreiNode node, NodeInfo info) {

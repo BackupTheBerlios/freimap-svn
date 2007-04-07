@@ -62,15 +62,11 @@ public class VisorFrame extends JPanel implements DataSourceListener, ComponentL
   
   DataSource source;
   
-  ImageIcon cbase  = new ImageIcon(getClass().getResource("/gfx/cbase.png")); 
-  //ImageIcon berlin = new ImageIcon(getClass().getResource("/gfx/berlin.png"));
+  Vector<BackgroundElement> bgitems = new Vector<BackgroundElement>();
   ImageIcon logo1  = new ImageIcon(getClass().getResource("/gfx/logo1.png"));
   ImageIcon logo2  = new ImageIcon(getClass().getResource("/gfx/logo2.png"));
   ImageIcon play   = new ImageIcon(getClass().getResource("/gfx/play.png"));
   ImageIcon stop   = new ImageIcon(getClass().getResource("/gfx/stop.png"));
-  double cscale = 40000; 
-  double clat = 52.520869, //cbase center coordinates
-         clon = 13.409457;
 
   int mousex=0, mousey=0;
   FreiNode selectedNode;
@@ -93,7 +89,22 @@ public class VisorFrame extends JPanel implements DataSourceListener, ComponentL
   DateFormat dfdate=DateFormat.getDateInstance(DateFormat.MEDIUM, Locale.GERMANY),
              dftime=DateFormat.getTimeInstance(DateFormat.MEDIUM, Locale.GERMANY);
 
+  void initBackgrounds() {
+    int num=Configurator.getI("background.count");
+    for (int i=1;i<=num;i++) {
+      bgitems.addElement(new BackgroundElement(
+        new ImageIcon(getClass().getResource(Configurator.get("background."+i+".gfx"))), //this might crash
+        Configurator.getD("background."+i+".lon"),
+        Configurator.getD("background."+i+".lat"),
+        Configurator.getD("background."+i+".scale")
+      ));
+    }
+  }
+
   public VisorFrame(DataSource source) {
+    
+    initBackgrounds();
+
     this.source=source;
     this.source.addDataSourceListener(this);
     this.addComponentListener(this);
@@ -103,6 +114,7 @@ public class VisorFrame extends JPanel implements DataSourceListener, ComponentL
 
     System.out.println("reading node list.");
     nodes=source.getNodeList();
+    dumpNodes();
     System.out.println("reading node availability.");
     availmap=source.getNodeAvailability(0);
     System.out.print("reading link list.");
@@ -156,8 +168,12 @@ public class VisorFrame extends JPanel implements DataSourceListener, ComponentL
     nextFrame();
   }
   public void nodeListUpdate(FreiNode node) {
-    nodes.add(node);
-    
+    if (nodes!=null) { //fixme: this really should not happen
+      nodes.add(node);
+      dumpNodes();
+    }
+  }
+  private void dumpNodes() {
     try {
       ObjectOutputStream oos=new ObjectOutputStream(new FileOutputStream("nodes.dump"));
       oos.writeObject(nodes);
@@ -223,15 +239,23 @@ public class VisorFrame extends JPanel implements DataSourceListener, ComponentL
     g.fillRect(0,0,w,h);
 
 
-    //draw bg
-    //todo !! fix position + scale of berlin map
-    double cbasexc = lon2x(clon) - 358d*scale/cscale; 
-    double cbaseyc = lat2y(clat) - 358d*scale/cscale;
-    //double berlinxc = (13.22000 - x) * scale + cx; 
-    //double berlinyc = (52.68472 - y) * -scale + cy;
-    g.drawImage(cbase.getImage(), new AffineTransform(scale/cscale,0d,0d,scale/cscale,cbasexc,cbaseyc), this);
-    //g.drawImage(berlin.getImage(), new AffineTransform(scale/7500,0d,0d,scale/7500,berlinxc,berlinyc), this);
-
+    {
+    //draw backgrounds
+      BackgroundElement e;
+      double rscale, xc, yc;
+      int w2, h2;
+      for (int i=0;i<bgitems.size();i++) {
+        e = bgitems.elementAt(i);
+        Image img=e.gfx.getImage();
+        w2 = img.getWidth(this)/2;
+        h2 = img.getHeight(this)/2;
+        rscale = scale/e.scale;
+        xc = lon2x(e.lon) - w2*rscale; 
+        yc = lat2y(e.lat) - h2*rscale;
+        g.drawImage(img, new AffineTransform(rscale,0d,0d,rscale,xc,yc), this);
+      }
+    }
+        
     //draw links
     Stroke linkStroke = new BasicStroke((float)(Math.min(5,0.00005 * scale)), BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
     Stroke cableStroke = new BasicStroke((float)(Math.min(15,0.00015 * scale)), BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
@@ -285,6 +309,11 @@ public class VisorFrame extends JPanel implements DataSourceListener, ComponentL
             link.to.latsum+=link.from.lat;
             link.to.nc++;
           }
+          if (link.from.unlocated) {
+            link.from.lonsum+=link.to.lon;
+            link.from.latsum+=link.to.lat;
+            link.from.nc++;
+          }
         }
       }
     }
@@ -319,7 +348,9 @@ public class VisorFrame extends JPanel implements DataSourceListener, ComponentL
         } else if (node.nc == 1) {
           node.lon=node.lonsum + 0.0003;
           node.lat=node.latsum + 0.0003;
-        }
+        } /*else {
+          System.err.println("Node unlocated with no neighbours: "+node.id);
+        }*/
         node.lonsum=0; node.latsum=0; node.nc=0;
       }
     }

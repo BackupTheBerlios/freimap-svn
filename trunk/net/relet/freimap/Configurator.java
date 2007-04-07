@@ -45,6 +45,11 @@ public class Configurator {
     {"mysql.db", "freifunk", "# database name"},
     {"mysql.tables.nodes", "nodes_interpolated", "# table name for node positions"},
     {"mysql.tables.links", "links", "# table name for link data"},
+    {"background.count", "1", "# background picture count"},
+    {"background.1.gfx", "/gfx/cbase.png", "# background picture"},
+    {"background.1.lon", "52.520869", "# longitude of center of background"},
+    {"background.1.lat", "13.409457", "# latitude"},
+    {"background.1.scale", "40000", "# scale - you need to experiment here"},
   };
   public static Hashtable<String,String> config=new Hashtable<String,String>();
 
@@ -61,6 +66,13 @@ public class Configurator {
       return Integer.parseInt(config.get(key)); 
     } catch (Exception ex) {
       return -1;
+    }
+  }
+  public static double getD(String key) {
+    try {
+      return Double.parseDouble(config.get(key)); 
+    } catch (Exception ex) {
+      return Double.NaN;
     }
   }
 
@@ -110,9 +122,9 @@ public class Configurator {
             String value=line.substring(pos+1);
             if (value.indexOf("\t#")>0) value=value.substring(0,value.indexOf("\t#"));
             value=value.trim();
-            if (config.get(key)==null) {
-              System.out.println("Warning: Ignoring unknown configuration key "+key);
-            }
+            /* if (config.get(key)==null) {
+              System.out.println("Warning: Possibly ignoring unknown configuration key "+key);
+            } */
             config.put(key, value);
           } else {
             System.out.println("Ignoring malformed configuration line "+n+".");

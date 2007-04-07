@@ -35,10 +35,9 @@ public class FreiNode implements Comparable, Serializable {
 
   public FreiNode(String id) {
     this.id=id;
-    
     lat = 52.520869;// + Math.random()/50-0.01; //when no coordinates are known, generate some around the center of the cbase
     lon = 13.409457;// + Math.random()/50-0.01; //cbase center +- random 0.01
-    unlocated=true; 
+    this.unlocated=true; 
   }
   public FreiNode(String id, double lon, double lat) {
     this.id=id;
