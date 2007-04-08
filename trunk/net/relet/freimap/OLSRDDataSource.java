@@ -183,12 +183,15 @@ public class OLSRDDataSource implements DataSource {
       this.host=host;
       this.port=port;
     }
-    
+
     public void run() {
       Vector<FreiLink> linkData = null;
       try {
+        InetSocketAddress destination = new InetSocketAddress(host, port);
         while (true) { //reconnect upon disconnection
-        Socket s = new Socket(host, port);
+        Socket s = new Socket();
+	//s.setSoTimeout(10000);
+        s.connect(destination, 25000);
         in = new BufferedReader(new InputStreamReader(s.getInputStream()));
         while (in!=null) {
           String line=in.readLine();
@@ -229,6 +232,9 @@ public class OLSRDDataSource implements DataSource {
           } 
         }
         }
+      } catch (SocketTimeoutException ex) {
+        System.err.println("[OLSRDataSource] timeout while trying to connect. "+ex.getMessage());
+        System.exit(1);
       } catch (ConnectException ex) {
         System.err.println(ex.getMessage()+" ["+host+":"+port+"]");
         System.exit(1);

@@ -38,13 +38,15 @@ todo dimension -> configfile
      rename x and y into lon and lat
 */
 
-public class VisorFrame extends JPanel implements DataSourceListener, ComponentListener, ActionListener, MouseListener, MouseMotionListener {
+public class VisorFrame extends JPanel implements DataSourceListener, ComponentListener, ActionListener, MouseListener, MouseMotionListener, MouseWheelListener {
   double x=0, y=0, scale=1.0d; //x,y = center of map (lat and lon, actually), scale = current scaling
   Vector<FreiNode> nodes; //vector of known nodes
   Vector<FreiLink> links; //vector of currently displayed links
   Hashtable<String, Float> availmap; //node availability in percent (0f-1f)
   Hashtable<String, NodeInfo> nodeinfo=new Hashtable<String, NodeInfo>(); //stores nodeinfo upon right click
   Hashtable<FreiLink, LinkInfo> linkinfo=new Hashtable<FreiLink, LinkInfo>(); //stores linkinfo upon right click
+
+  private final static int ZOOMSPEED = 20;
   
   Image buf; //double buffer
   int w=800,h=600; //screen width, hight
@@ -110,6 +112,7 @@ public class VisorFrame extends JPanel implements DataSourceListener, ComponentL
     this.addComponentListener(this);
     this.addMouseListener(this);
     this.addMouseMotionListener(this);
+    this.addMouseWheelListener(this);
     runtime=Runtime.getRuntime();
 
     System.out.println("reading node list.");
@@ -742,13 +745,17 @@ public class VisorFrame extends JPanel implements DataSourceListener, ComponentL
           break;
         }
         case MouseEvent.BUTTON3: {
-          setScale(e.getX()-mrefx);
+          setScale(((mrefy-e.getY()) + (e.getX()-mrefx))/2);
           break;
         }
       }
     }
   }
   //the rest  
+  public void mouseWheelMoved(MouseWheelEvent e) {
+    saveScale();
+    setScale( -e.getWheelRotation() * ZOOMSPEED);
+  }
   public void mouseEntered(MouseEvent e) {}
   public void mouseExited(MouseEvent e) {}
   public void mouseReleased(MouseEvent e) {}
