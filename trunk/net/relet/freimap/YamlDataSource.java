@@ -42,6 +42,8 @@ public class YamlDataSource implements DataSource {
   int clockCount;
   LinkedList<YamlState> updateTimes=new LinkedList<YamlState>();
   HashMap<Integer, FreiNode> nodeByID=new HashMap<Integer, FreiNode>();
+  HashMap<String, FreiNode> nodeByName=new HashMap<String, FreiNode>();
+  Vector<FreiNode> nodes;
   
   DataSourceListener listener;
 
@@ -120,7 +122,7 @@ public class YamlDataSource implements DataSource {
   
   public Vector<FreiNode> getNodeList() {
     if (useMysqlSource) {
-      Vector<FreiNode> nodes = mysqlSource.getNodeList();
+      nodes = mysqlSource.getNodeList();
       //for (Enumeration<String> enu = generatedNodes.keys(); enu.hasMoreElements();) {
       //  nodes.add(generatedNodes.get(enu.nextElement()));
       //}
@@ -128,7 +130,7 @@ public class YamlDataSource implements DataSource {
     } else {
       try {
         ObjectInputStream ois=new ObjectInputStream(getClass().getResourceAsStream(Configurator.get("olsrd.nodefile")));
-        Vector<FreiNode> nodes = (Vector<FreiNode>)ois.readObject();
+        nodes = (Vector<FreiNode>)ois.readObject();
         ois.close();
         //for (int i=0;i<nodes.size();i++) { 
         //  knownNodes.put(nodes.elementAt(i).id, nodes.elementAt(i));
@@ -220,10 +222,11 @@ public class YamlDataSource implements DataSource {
     try {
       HashMap<String, HashMap> yaml=(HashMap<String, HashMap>)Yaml.load(new File("node.yaml"));
       HashMap<String, Object> nodedata = yaml.get(id.toString());
-      
-      System.out.println("getNode "+id);
-      System.out.println(xstream.toXML(yaml));
-      System.out.println(xstream.toXML(nodedata));
+      String ip=(String)nodedata.get("ip");
+      FreiNode node=nodeByName.get(ip);
+      //System.out.println("getNode "+id);
+      //System.out.println(xstream.toXML(yaml));
+      //System.out.println(xstream.toXML(nodedata));
       System.exit(0);
       
       

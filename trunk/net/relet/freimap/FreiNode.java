@@ -22,6 +22,7 @@
 
 package net.relet.freimap;
 
+import java.util.HashMap;
 import java.io.Serializable;
 
 public class FreiNode implements Comparable, Serializable {
@@ -30,6 +31,7 @@ public class FreiNode implements Comparable, Serializable {
   public double lonsum=0, latsum=0; //used only for real time interpolation
   public int nc=0;
   public boolean unlocated=false;
+  public HashMap<String, Object> attributes;
   
   public FreiNode() {} //serializable
 
