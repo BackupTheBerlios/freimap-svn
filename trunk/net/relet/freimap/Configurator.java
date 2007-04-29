@@ -36,6 +36,7 @@ public class Configurator {
   private static final String[][] CONFIG_DEFAULTS = new String[][]{
     {"DataSource", "net.relet.freimap.OLSRDDataSource", "# net.relet.freimap.{OLSRDDataSource|MysqlDataSource}"},
     {"#DataSource", "net.relet.freimap.MysqlDataSource", ""},
+    {"yaml.url", "http://ffsomething.somewhere.tld", "# url of the ffsomething yaml server"},
     {"olsrd.host", "localhost", "# hostname"},
     {"olsrd.port", "2004", "# port"},
     {"olsrd.nodefile", "/data/nodes.dump", "# keep the default value unless you know what you're doing"},

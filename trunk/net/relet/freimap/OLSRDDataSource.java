@@ -182,6 +182,7 @@ public class OLSRDDataSource implements DataSource {
       this.parent=parent;
       this.host=host;
       this.port=port;
+      System.setProperty("java.net.IPv4Stack", "true"); //not necessary, but works around a bug in older java versions.
     }
 
     public void run() {

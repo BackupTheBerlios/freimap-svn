@@ -24,8 +24,16 @@ package net.relet.freimap;
 
 public class FreiLink {
   public FreiNode from, to;
-  public float etx=-1;
+  public float etx=-1, lq=-1, nlq=-1;
   public boolean HNA=false;
+  public FreiLink(FreiNode from, FreiNode to, float lq, float nlq, boolean HNA) {
+    this.from = from;
+    this.to = to;
+    this.lq = lq;
+    this.nlq = nlq;
+    this.etx = 1f / (lq * nlq);
+    this.HNA = HNA;
+  }
   public FreiLink(FreiNode from, FreiNode to, float etx) {
     this(from,to,etx,false);
   }

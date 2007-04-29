@@ -32,6 +32,9 @@ import java.util.*;
 import javax.swing.*;
 import javax.swing.border.*;
 
+//import com.thoughtworks.xstream.*;
+import org.ho.yaml.*;
+
 /*
 todo dimension -> configfile
      sensible method names
@@ -177,14 +180,16 @@ public class VisorFrame extends JPanel implements DataSourceListener, ComponentL
     }
   }
   private void dumpNodes() {
-    try {
+    //exportNodes();
+    //exportLinks();
+    /*try {
       ObjectOutputStream oos=new ObjectOutputStream(new FileOutputStream("nodes.dump"));
       oos.writeObject(nodes);
       oos.flush();
       oos.close();
     } catch (Exception ex) {
       ex.printStackTrace();
-    } 
+    } */
   }
   
   public Dimension getPreferredSize() {
@@ -776,4 +781,50 @@ public class VisorFrame extends JPanel implements DataSourceListener, ComponentL
     } 
     oldTime = closestTime;
   }
+
+  //XStream xstream = new XStream();
+  public void exportNodes() {
+    if (nodes==null) return;
+    try {
+      Yaml.dumpStream(nodes.iterator(), new File("nodes.yaml"), true);
+    } catch (Exception ex) {
+      ex.printStackTrace();
+    }
+/*
+    xstream.alias("node", FreiNode.class);
+    xstream.omitField(FreiNode.class, "lonsum");
+    xstream.omitField(FreiNode.class, "latsum");
+    xstream.omitField(FreiNode.class, "nc");
+    try {
+      String xmlNodes = xstream.toXML(nodes);
+      PrintWriter out=new PrintWriter(new FileWriter("nodes.xml"));
+      out.println(xmlNodes);
+      out.close();
+    } catch (ConcurrentModificationException cmex) {
+      System.out.println("An exception happened which may be safely ignored.");
+    } catch (Exception ex) {
+      System.out.println(ex);
+    }
+*/
+  }
+  public void exportLinks() {
+    if (links==null) return;
+    try {
+      Yaml.dumpStream(links.iterator(), new File("links.yaml"), true);
+    } catch (Exception ex) {
+      ex.printStackTrace();
+    }
+/*    xstream.alias("link", FreiLink.class);
+    try {
+      String xmlLinks = xstream.toXML(links);
+      PrintWriter out=new PrintWriter(new FileWriter("links.xml"));
+      out.println(xmlLinks);
+      out.close();
+    } catch (ConcurrentModificationException cmex) {
+      System.out.println("An exception happened which may be safely ignored.");
+    } catch (Exception ex) {
+      System.out.println(ex);
+    }*/
+  }
+  
 }

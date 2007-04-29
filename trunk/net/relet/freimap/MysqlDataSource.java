@@ -131,7 +131,7 @@ public class MysqlDataSource implements DataSource {
   private void fetchAvailableTimeStamps() {
       new TimeStampFetcher();
       try {
-        Thread.sleep(100);
+        Thread.sleep(100); //sleep to allow a few time stamps to load. this is a hack, indeed.
       } catch (InterruptedException ex) {}
   }
 
