@@ -22,21 +22,16 @@
 
 package net.relet.freimap;
 
-import java.net.URL;
-import java.util.*;
+import javax.swing.ImageIcon;
 
-import javax.imageio.ImageIO;
-import javax.swing.*;
+public class Tile {
+  final ImageIcon image;
+  final public int x, y;
 
-public class BackgroundElement {
-  public ImageIcon gfx;
-  public double lon, lat, scale;
-
-  public BackgroundElement (ImageIcon gfx, double lon, double lat, double scale) {
-    this.gfx=gfx;
-    this.lon=lon;
-    this.lat=lat;
-    this.scale=scale;
+  public Tile (ImageIcon image, int x, int y) {
+    this.image = image;
+    this.x = x;
+    this.y = y;
   }
   
 }

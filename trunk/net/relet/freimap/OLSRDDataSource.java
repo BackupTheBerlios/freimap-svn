@@ -235,10 +235,10 @@ public class OLSRDDataSource implements DataSource {
         }
       } catch (SocketTimeoutException ex) {
         System.err.println("[OLSRDataSource] timeout while trying to connect. "+ex.getMessage());
-        System.exit(1);
+        return;
       } catch (ConnectException ex) {
         System.err.println(ex.getMessage()+" ["+host+":"+port+"]");
-        System.exit(1);
+        return;
       } catch (Exception ex) {
         ex.printStackTrace();
       }
