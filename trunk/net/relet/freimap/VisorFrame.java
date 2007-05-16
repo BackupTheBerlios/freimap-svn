@@ -49,6 +49,15 @@ public class VisorFrame extends JPanel implements DataSourceListener, ComponentL
   int zoom = 0;
   OSMMercatorProjection coordinateSystem;
   
+  ColorScheme cs = ColorScheme.OSM_MAP;
+  
+  double scale=1.0d; //x,y = center of map (lat and lon, actually), scale = current scaling
+  
+  int offsetX = 0;
+  int offsetY = 0;
+  int zoom = 0;
+  OSMMercatorProjection coordinateSystem;
+  
   TileCache tileCache = new TileCache();
   
   Vector<FreiNode> nodes; //vector of known nodes
@@ -68,8 +77,6 @@ public class VisorFrame extends JPanel implements DataSourceListener, ComponentL
   //first, lastavailabletime = available range of time interval
   //crttime = ...
   //oldtime = ...
-  double centertarglon, centertarglat;
-  //for smooth scrolling upon double click: map slowly centers on centertarglon, lat
   
   DataSource source;
   
@@ -99,6 +106,28 @@ public class VisorFrame extends JPanel implements DataSourceListener, ComponentL
 
   DateFormat dfdate=DateFormat.getDateInstance(DateFormat.MEDIUM, Locale.GERMANY),
              dftime=DateFormat.getTimeInstance(DateFormat.MEDIUM, Locale.GERMANY);
+  
+  TilePainter tp = new TilePainter()
+  {
+	  Graphics g;
+	  
+	  public void paint(Image image, int worldX, int worldY)
+	  {
+		  g.drawImage(image, worldToViewX(worldX), worldToViewY(worldY), VisorFrame.this);
+	  }
+	  
+	  public void setGraphics(Graphics g)
+	  {
+		  this.g = g;
+	  }
+	  
+	  public void update()
+	  {
+		  VisorFrame.this.repaint();
+	  }
+  };
+  
+  TileCache tileCache = new TileCache(tp);
 
   void initBackgrounds() {
     int num=Configurator.getI("background.count");
@@ -150,7 +179,7 @@ public class VisorFrame extends JPanel implements DataSourceListener, ComponentL
       if (node.lat>latmax) latmax=node.lat;
     }
     
-    initZoom(0);
+    initZoom(0, cx, cy);
     scale=coordinateSystem.getScale();
 
     FreiNode[] anodes=(nodes.toArray(new FreiNode[0]));
@@ -198,7 +227,7 @@ public class VisorFrame extends JPanel implements DataSourceListener, ComponentL
   }
   
   public Dimension getPreferredSize() {
-    return new Dimension(800,600);
+    return new Dimension(w,h);
   }
   
   public void actionPerformed(ActionEvent e) {
@@ -207,9 +236,9 @@ public class VisorFrame extends JPanel implements DataSourceListener, ComponentL
     for (int i=0;i<nodes.size();i++) {
       node = nodes.elementAt(i);
       if (node.id.equals(query)) {
-        centertarglon=node.lon;
-        centertarglat=node.lat;
-        return;
+    	  offsetX = coordinateSystem.lonToX(node.lon) - cx;
+    	  offsetY = coordinateSystem.latToY(node.lat) - cy;
+    	  return;
       }
     }
   }
@@ -236,27 +265,25 @@ public class VisorFrame extends JPanel implements DataSourceListener, ComponentL
 
     Graphics2D g=(Graphics2D)buf.getGraphics();
     g.setFont(mainfont);
-    g.setColor(Color.black);
+    g.setColor(cs.getColor(ColorScheme.Key.MAP_BACKGROUND));
     g.fillRect(0,0,w,h);
 
 
-    {
     //draw backgrounds
-      BackgroundElement e;
-      double rscale, xc, yc;
-      int w2, h2;
       for (int i=0;i<bgitems.size();i++) {
-        e = bgitems.elementAt(i);
+        BackgroundElement e = bgitems.elementAt(i);
         Image img=e.gfx.getImage();
-        w2 = img.getWidth(this)/2;
-        h2 = img.getHeight(this)/2;
-        rscale = coordinateSystem.getScale()/e.scale;
-        xc = worldToViewX((int) (coordinateSystem.longToX(e.lon) - w2*rscale)); 
-        yc = worldToViewY((int) (coordinateSystem.latToY(e.lat) - h2*rscale));
+        double w2 = img.getWidth(this)/2;
+        double h2 = img.getHeight(this)/2;
+        double rscale = coordinateSystem.getScale()/e.scale;
+        int xc = worldToViewX((int) (coordinateSystem.lonToX(e.lon) - w2*rscale)); 
+        int yc = worldToViewY((int) (coordinateSystem.latToY(e.lat) - h2*rscale));
         
         g.drawImage(img, new AffineTransform(rscale,0d,0d,rscale,xc,yc), this);
       }
-    }
+    
+    tp.setGraphics(g);
+    tileCache.paintTiles(zoom, offsetX, offsetY, w, h);
     
     Iterator<Tile> ite = tileCache.tileIterator(zoom);
     if (ite != null)
@@ -281,11 +308,10 @@ public class VisorFrame extends JPanel implements DataSourceListener, ComponentL
         double nsize = Math.min(45,Math.round(0.0015 * scale));
         g.drawOval((int)(lonToViewX(selectedLink.from.lon)-nsize/2), (int)(latToViewY(selectedLink.from.lat)-nsize/2), (int)(nsize), (int)(nsize));
       } else {
-        double fromx = lonToViewX(selectedLink.from.lon);
-        double fromy = latToViewY(selectedLink.from.lat);
-        double tox   = lonToViewX(selectedLink.to.lon);
-        double toy   = latToViewY(selectedLink.to.lat);
-        g.draw(new Line2D.Double(fromx, fromy, tox, toy));
+        g.drawLine(lonToViewX(selectedLink.from.lon),
+        		latToViewY(selectedLink.from.lat),
+        		lonToViewX(selectedLink.to.lon), 
+        		latToViewY(selectedLink.to.lat));
       }
     }
 
@@ -310,11 +336,10 @@ public class VisorFrame extends JPanel implements DataSourceListener, ComponentL
             green=1/link.etx;
             g.setColor(new Color(1-green, green, 0.5f));
           }
-          double fromx = lonToViewX(link.from.lon);
-          double fromy = lonToViewX(link.from.lat);
-          double tox   = lonToViewX(link.to.lon);
-          double toy   = lonToViewX(link.to.lat);
-          g.draw(new Line2D.Double(fromx, fromy, tox, toy));
+          g.drawLine(lonToViewX(link.from.lon),
+          		latToViewY(link.from.lat),
+          		lonToViewX(link.to.lon), 
+          		latToViewY(link.to.lat));
         
           if (link.to.unlocated) {
             link.to.lonsum+=link.from.lon;
@@ -331,20 +356,18 @@ public class VisorFrame extends JPanel implements DataSourceListener, ComponentL
     }
     
     //draw nodes
-    g.setColor(Color.white);
-    FreiNode node;
-    float avail;
+    g.setColor(cs.getColor(ColorScheme.Key.NODE_UPLINK));
     for (int i=0; i<nodes.size(); i++) {
-      node=(FreiNode)nodes.elementAt(i);
+      FreiNode node=(FreiNode)nodes.elementAt(i);
       if (node.equals(uplink)) continue;
       if (node.unlocated) {
-        g.setColor(Color.yellow);
+        g.setColor(cs.getColor(ColorScheme.Key.NODE_UNLOCATED));
       } else if (availmap!=null) {
         Object oavail = availmap.get(node.id);
         if (oavail==null) {
-          g.setColor(Color.white);
+          g.setColor(cs.getColor(ColorScheme.Key.NODE_UNAVAILABLE));
         } else {
-          avail = (float)Math.sqrt(((Float)oavail).floatValue()); 
+          float avail = (float)Math.sqrt(((Float)oavail).floatValue()); 
           g.setColor(new Color(1.0f-avail, avail, 0.5f));
         }
       }
@@ -541,8 +564,9 @@ public class VisorFrame extends JPanel implements DataSourceListener, ComponentL
     g.draw(footer);
     g.setFont(mainfont);
     g.drawString("{ cim city || freifunc ^ cience };", 10, 20);
-    g.drawString("lon "+viewXToLon(mousex), w/2, 20);
-    g.drawString("lat "+viewYToLat(mousey), 3*w/4, 20);
+    g.drawString("coom " + zoom + "/17", w/4, 20);
+    g.drawString("lon " + viewXToLon(mousex), w/2, 20);
+    g.drawString("lat " + viewYToLat(mousey), 3*w/4, 20);
     g.drawString(new Date(oldTime*1000).toString(), 10, h-10);
     
     long free  =runtime.freeMemory(),
@@ -589,7 +613,7 @@ public class VisorFrame extends JPanel implements DataSourceListener, ComponentL
   
   private int lonToViewX(double lon)
   {
-	  return (int) coordinateSystem.longToX(lon) - offsetX;
+	  return (int) coordinateSystem.lonToX(lon) - offsetX;
   }
 
   private int latToViewY(double lat)
@@ -607,7 +631,7 @@ public class VisorFrame extends JPanel implements DataSourceListener, ComponentL
 	  return coordinateSystem.yToLat(y + offsetY);
   }
   
-  private void initZoom(int zoom)
+  private void initZoom(int zoom, int viewX, int viewY)
   {
 	  if (coordinateSystem == null)
 		  coordinateSystem = new OSMMercatorProjection(0);
@@ -617,40 +641,32 @@ public class VisorFrame extends JPanel implements DataSourceListener, ComponentL
 	  // the new projection and then calculate the new
 	  // offsets.
 	  
-	  double lon = coordinateSystem.xToLong(offsetX + cx); 
-	  double lat = coordinateSystem.yToLat(offsetY + cy);
+	  double lon = coordinateSystem.xToLong(offsetX + viewX); 
+	  double lat = coordinateSystem.yToLat(offsetY + viewY);
 	  
 	  coordinateSystem = new OSMMercatorProjection(zoom);
 	  
 	  // Geo coordinates -> new view offset
-	  offsetX = (int) coordinateSystem.longToX(lon) - cx;
-	  offsetY = (int) coordinateSystem.latToY(lat) - cy;
+	  offsetX = (int) coordinateSystem.lonToX(lon) - viewX;
+	  offsetY = (int) coordinateSystem.latToY(lat) - viewY;
   }
   
-  public void setScale(boolean increase) {
-/*
-	    double factor = Math.pow(10, (double)x / 100);
-	    this.scale = refscale * factor;
-	    this.repaint();
-*/
+  private void setScale(boolean increase, int worldX, int worldY) {
 	zoom += (increase ? +1 : -1);
 	zoom = Math.min(17, Math.max(0, zoom));
 	
-	initZoom(zoom);
+	initZoom(zoom, worldX, worldY);
 	
-//	 Calculate the unit size
+    // Calculate the unit size
 	scale = coordinateSystem.getScale();
 
-	System.out.println("zoom level: " + zoom);
-	System.out.println("scale: " + scale);
-	
 	repaint();
   }
   
   public void centerOn(Point p) {
     // This should be redone with world coordinates
-    centertarglon = viewXToLon(p.x);
-    centertarglat = viewYToLat(p.y);
+    offsetX = viewToWorldX(p.x) - cx;
+    offsetY = viewToWorldY(p.y) - cy;
   }
 
   public FreiNode getSelectedNode() {
@@ -720,7 +736,6 @@ public class VisorFrame extends JPanel implements DataSourceListener, ComponentL
     mousex = e.getX();
     mousey = e.getY();
     
-    // TODO: Redo with world coordinates
     double lon = viewXToLon(mousex);
     double lat = viewYToLat(mousey);
     if ((mousey>h-100)&&(mousex >= timelinex0)&&(mousex <= timelinex1)) {
@@ -740,7 +755,6 @@ public class VisorFrame extends JPanel implements DataSourceListener, ComponentL
     mousex = e.getX();
     mousey = e.getY();
     
-    // TODO: Redo with world coordinates
     double lon = viewXToLon(mousex);
     double lat = viewYToLat(mousey);
 
@@ -807,18 +821,7 @@ public class VisorFrame extends JPanel implements DataSourceListener, ComponentL
     		System.out.println("mercator calculation - tx: " + tx + " - ty: " + ty);
     	  }
     	break;
-      case MouseEvent.BUTTON3: {
-        if (coordinateSystem != null)
-        {
-        	int tx = viewToWorldX(mrefx) / OSMMercatorProjection.TILE_SIZE;
-        	int ty = viewToWorldY(mrefy) / OSMMercatorProjection.TILE_SIZE;
-        	
-        	tileCache.requestTile(zoom, tx, ty);
-        	
-        }
-        break;
       }
-    }
   }
 
   public void mouseDragged(MouseEvent e) {
@@ -849,8 +852,10 @@ public class VisorFrame extends JPanel implements DataSourceListener, ComponentL
   //the rest  
   public void mouseWheelMoved(MouseWheelEvent e) {
     saveScale();
-    //setScale( -e.getWheelRotation() * ZOOMSPEED);
-    setScale(e.getWheelRotation() < 0);
+    
+    Point p = e.getPoint();
+    
+    setScale(e.getWheelRotation() < 0, p.x, p.y);
     
   }
   public void mouseEntered(MouseEvent e) {}
@@ -858,12 +863,10 @@ public class VisorFrame extends JPanel implements DataSourceListener, ComponentL
   public void mouseReleased(MouseEvent e) {}
 
   public void nextFrame() {
-	  return;
-	  /*
-    if (Math.random()<0.01) System.gc();
-    //begin: this should move into repaint block
-    x = (x * 3 + centertarglon) / 4;
-    y = (y * 3 + centertarglat) / 4;
+/*
+	  //begin: this should move into repaint block
+    offsetX = (offsetX * 3 + targetOffsetX) / 4;
+    offsetY = (offsetY * 3 + targetOffsetY) / 4;
     // end
     //crtTime += 100;
     if (playing) crtTime += 1;

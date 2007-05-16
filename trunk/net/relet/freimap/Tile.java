@@ -22,14 +22,20 @@
 
 package net.relet.freimap;
 
+import java.net.URL;
+
 import javax.swing.ImageIcon;
 
 public class Tile {
-  final ImageIcon image;
+  ImageIcon icon;
+  URL url;
+  
+  int paintAttempt = 0;
+
   final public int x, y;
 
-  public Tile (ImageIcon image, int x, int y) {
-    this.image = image;
+  public Tile (URL url, int x, int y) {
+    this.url = url;
     this.x = x;
     this.y = y;
   }

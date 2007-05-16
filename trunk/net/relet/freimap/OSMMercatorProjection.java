@@ -16,7 +16,7 @@ package net.relet.freimap;
  * @author Robert Schuster
  *
  */
-public class OSMMercatorProjection {
+public final class OSMMercatorProjection {
 
 	/**
 	 * Fixed number of pixels in a tile.
@@ -69,8 +69,8 @@ public class OSMMercatorProjection {
 	 * @param longitude
 	 * @return
 	 */
-	double longToX(double longitude) {
-		return (radius * Math.toRadians(longitude)) - falseEasting;
+	int lonToX(double longitude) {
+		return (int) ((radius * Math.toRadians(longitude)) - falseEasting);
 	}
 
 	/**
@@ -79,13 +79,13 @@ public class OSMMercatorProjection {
 	 * @param latitude
 	 * @return
 	 */
-	double latToY(double latitude) {
+	int latToY(double latitude) {
 		latitude = Math.toRadians(latitude);
 
-		return -(radius
+		return (int) (-(radius
 				/ 2.0
 				* Math.log((1.0 + Math.sin(latitude))
-						/ (1.0 - Math.sin(latitude)))) + falseNorthing;
+						/ (1.0 - Math.sin(latitude)))) + falseNorthing);
 	}
 	
 	double xToLong(double x)
@@ -135,7 +135,7 @@ public class OSMMercatorProjection {
 	 * This value is smallest at the equator and gets bigger towards the
 	 * poles.
 	 * 
-	 * Calculation this value for the poles (latitude of -90° and 90°) should
+	 * Calculating this value for the poles (latitude of -90° and 90°) should
 	 * be avoided because that would lead to a division by zero.
 	 * 
 	 * @return
@@ -146,7 +146,7 @@ public class OSMMercatorProjection {
 	}
 	
 	/**
-	 * Calculates earth circumference at a certain latitude.
+	 * Calculates earth' circumference at a certain latitude.
 	 * 
 	 * @param latitude
 	 * @return
@@ -156,14 +156,24 @@ public class OSMMercatorProjection {
 		return 2 * Math.PI * (Math.cos(Math.toRadians(latitude)) * circumference);
 	}
 	
-	int getTileX(double longitude)
+	int lonToTileX(double longitude)
 	{
-		return ((int) longToX(longitude)) / TILE_SIZE;
+		return lonToX(longitude) >>> 8;
 	}
 	
-	int getTileY(double latitude)
+	int latToTileY(double latitude)
 	{
-		return ((int) latToY(latitude)) / TILE_SIZE;
+		return latToY(latitude) >>> 8;
+	}
+	
+	static int worldToTile(int w)
+	{
+		return w >>> 8;
+	}
+	
+	static int tileToWorld(int t)
+	{
+		return t << 8;
 	}
 
 }

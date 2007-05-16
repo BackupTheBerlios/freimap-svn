@@ -1,1 +1,8 @@
-javac -nowarn -classpath .:lib/mysql-connector-java-5.0.5-bin.jar:lib/jfreechart-1.0.4.jar:lib/jcommon-1.0.8.jar:lib/xstream-1.2.2-20061111.171510-1.jar:lib/xpp3_min-1.1.4c.jar:lib/jyaml-lib-1.0-beta-3.jar -Xlint:unchecked  net/relet/freimap/Visor.java net/relet/freimap/OLSRDDataSource.java net/relet/freimap/MysqlDataSource.java net/relet/freimap/YamlDataSource.java && ( rm freimap.jar ; jar cvfm freimap.jar META-INF/MANIFEST.MF LICENCE README  net/relet/freimap/*.class gfx/*.* data/*.* )
+if [ x$JAVA_HOME == x ];
+then
+	JAVAC=javac
+else
+	JAVAC=$JAVA_HOME/bin/javac
+fi
+
+$JAVAC -nowarn -classpath .:lib/mysql-connector-java-5.0.5-bin.jar:lib/jfreechart-1.0.4.jar:lib/jcommon-1.0.8.jar:lib/xstream-1.2.2-20061111.171510-1.jar:lib/xpp3_min-1.1.4c.jar:lib/jyaml-lib-1.0-beta-3.jar -Xlint:unchecked  net/relet/freimap/Visor.java net/relet/freimap/OLSRDDataSource.java net/relet/freimap/MysqlDataSource.java net/relet/freimap/YamlDataSource.java && ( rm freimap.jar ; jar cvfm freimap.jar META-INF/MANIFEST.MF LICENCE README  net/relet/freimap/*.class gfx/*.* data/*.* )
