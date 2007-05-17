@@ -51,15 +51,6 @@ public class VisorFrame extends JPanel implements DataSourceListener, ComponentL
   
   ColorScheme cs = ColorScheme.OSM_MAP;
   
-  double scale=1.0d; //x,y = center of map (lat and lon, actually), scale = current scaling
-  
-  int offsetX = 0;
-  int offsetY = 0;
-  int zoom = 0;
-  OSMMercatorProjection coordinateSystem;
-  
-  TileCache tileCache = new TileCache();
-  
   Vector<FreiNode> nodes; //vector of known nodes
   Vector<FreiLink> links; //vector of currently displayed links
   Hashtable<String, Float> availmap; //node availability in percent (0f-1f)
@@ -284,16 +275,6 @@ public class VisorFrame extends JPanel implements DataSourceListener, ComponentL
     
     tp.setGraphics(g);
     tileCache.paintTiles(zoom, offsetX, offsetY, w, h);
-    
-    Iterator<Tile> ite = tileCache.tileIterator(zoom);
-    if (ite != null)
-    {
-    	while (ite.hasNext())
-    	{
-    		Tile t = ite.next();
-    		g.drawImage(t.image.getImage(), worldToViewX(t.x), worldToViewY(t.y), this);
-    	}
-    }
         
     //draw links
     Stroke linkStroke = new BasicStroke((float)(Math.min(5,0.00005 * scale)), BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
