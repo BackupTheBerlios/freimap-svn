@@ -5,7 +5,6 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.LinkedList;
 
-import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 
 /**

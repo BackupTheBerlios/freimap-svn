@@ -22,18 +22,44 @@
 
 package net.relet.freimap;
 
-import java.io.*;
+import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Image;
+import java.awt.Point;
+import java.awt.Shape;
+import java.awt.Stroke;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.Ellipse2D;
+import java.awt.geom.Line2D;
+import java.awt.geom.Rectangle2D;
+import java.awt.geom.RoundRectangle2D;
+import java.io.File;
+import java.text.DateFormat;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.Hashtable;
+import java.util.Locale;
+import java.util.Vector;
 
-import java.awt.*;
-import java.awt.geom.*;
-import java.awt.event.*;
-import java.text.*;
-import java.util.*;
-import javax.swing.*;
-import javax.swing.border.*;
+import javax.swing.ImageIcon;
+import javax.swing.JComboBox;
+import javax.swing.JPanel;
+import javax.swing.border.LineBorder;
 
-//import com.thoughtworks.xstream.*;
-import org.ho.yaml.*;
+import org.ho.yaml.Yaml;
 
 /*
 todo dimension -> configfile

@@ -26,9 +26,7 @@ import java.awt.Image;
 import java.io.IOException;
 import java.net.URL;
 
-import javax.imageio.IIOException;
 import javax.imageio.ImageIO;
-import javax.swing.ImageIcon;
 
 public class Tile {
   Image image;
@@ -41,6 +39,12 @@ public class Tile {
   final int zoom;
   
   long startTime = -1;
+  
+  /**
+   * Amount of KiB an image consumes in memory.
+   * 
+   */
+  final static int IMAGE_SIZE_KiB = (256 * 256 * 3) / 1024; 
   
   static enum State
   {
