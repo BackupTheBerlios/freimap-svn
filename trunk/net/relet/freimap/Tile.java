@@ -32,8 +32,6 @@ public class Tile {
   Image image;
   URL url;
   
-  int paintAttempt = 0;
-
   final int x, y;
   
   final int zoom;
@@ -99,6 +97,20 @@ public class Tile {
 	  {
 		  state = State.CREATED;
 	  }
+  }
+  
+  /**
+   * Returns an image of the current tile.
+   * 
+   * The returned image may denote the condition the current tile
+   * is in. E.g. if it is loading a "loading" image is displayed.
+   * 
+   * @return
+   */
+  Image getImage()
+  {
+	  // TODO: Implement me.
+	  return null;
   }
   
 }

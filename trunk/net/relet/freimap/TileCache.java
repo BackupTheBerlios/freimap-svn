@@ -30,11 +30,6 @@ public class TileCache extends Thread {
 	
 	private volatile int zoom;
 
-	/**
-	 * How often a tile paint is attempted before loading is triggered.
-	 */
-	private static final int MAX_PAINT_ATTEMPTS = 3;
-
 	TileCache(TilePainter tp) {
 		this.tp = tp;
 
