@@ -22,22 +22,79 @@
 
 package net.relet.freimap;
 
+import java.awt.Image;
+import java.io.IOException;
 import java.net.URL;
 
+import javax.imageio.IIOException;
+import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 
 public class Tile {
-  ImageIcon icon;
+  Image image;
   URL url;
   
   int paintAttempt = 0;
 
-  final public int x, y;
+  final int x, y;
+  
+  final int zoom;
+  
+  long startTime = -1;
+  
+  static enum State
+  {
+	  CREATED,    // Freshly created, no image present 
+	  LOADED,     // Image loaded
+	  SCHEDULED,  // Scheduled for loading the image
+	  WAITING     // Counting age to determine load scheduling
+  }
+  
+  State state;
+  
+  /**
+   * Amount of time to pass until a tile is actually loaded.
+   */
+  final static long LOAD_AGE = 5000; 
 
-  public Tile (URL url, int x, int y) {
+  public Tile (URL url, int zoom, int x, int y) {
     this.url = url;
+    this.zoom = zoom;
     this.x = x;
     this.y = y;
+    
+    state = State.CREATED;
+  }
+  
+  boolean shouldLoad()
+  {
+	  if (state == State.CREATED)
+	  {
+	    startTime = System.currentTimeMillis();
+		  state = State.WAITING;
+	  } else if(state == State.WAITING)
+	  {
+		  if (System.currentTimeMillis() - startTime > LOAD_AGE)
+		  {
+			  state = State.SCHEDULED;
+			  return true;
+		  }
+	  }
+	  
+	  return false;
+  }
+  
+  void loadImage()
+  {
+	  try
+	  {
+	    image = ImageIO.read(url);
+	    state = State.LOADED;
+	  }
+	  catch (IOException _)
+	  {
+		  state = State.CREATED;
+	  }
   }
   
 }

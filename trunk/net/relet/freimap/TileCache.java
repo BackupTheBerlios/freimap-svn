@@ -5,6 +5,7 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.LinkedList;
 
+import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 
 /**
@@ -27,6 +28,8 @@ public class TileCache extends Thread {
 	private LinkedList<Tile> loadQueue = new LinkedList<Tile>();
 
 	private TilePainter tp;
+	
+	private volatile int zoom;
 
 	/**
 	 * How often a tile paint is attempted before loading is triggered.
@@ -60,14 +63,16 @@ public class TileCache extends Thread {
 
 				t = loadQueue.removeFirst();
 			}
+			
+			// Discard loading tiles which do not have the current
+			// visible zoom.
+			if (t.zoom != zoom)
+				continue;
 
 			System.err.println("fetching image:" + t.url);
-			t.icon = new ImageIcon(t.url);
-			if (t.icon == null)
-			  t.paintAttempt = 0;
-			else
-			  t.url = null;
-
+			
+			t.loadImage();
+			
 			tp.update();
 
 		}
@@ -78,7 +83,7 @@ public class TileCache extends Thread {
 
 		try {
 			URL url = new URL(TILE_SERVER_URL + tileName);
-			Tile e = new Tile(url, tx, ty);
+			Tile e = new Tile(url, zoom, tx, ty);
 
 			cache.put(key(zoom, tx, ty), e);
 		} catch (MalformedURLException e) {
@@ -89,6 +94,11 @@ public class TileCache extends Thread {
 
 	private long key(long zoom, long tx, long ty) {
 		return (zoom << 24) + (ty << 16) + tx;
+	}
+	
+	void setZoom(int z)
+	{
+		zoom = z;
 	}
 
 	void paintTiles(int zoom, int wx, int wy, int ww, int wh) {
@@ -104,26 +114,21 @@ public class TileCache extends Thread {
 				if (tile == null) {
 					createTile(zoom, tx, ty);
 					tp.paint(REPLACEMENT.getImage(), tx << 8, ty << 8);
-				} else if (tile.icon == null) {
+				} else if (tile.image == null) {
 					// Image is not there.
 					
-					// Postpone image loading a few times but then do it.
-					if (tile.paintAttempt >= 0
-							&& ++tile.paintAttempt >= MAX_PAINT_ATTEMPTS) {
+					if (tile.shouldLoad()) {
 						
 						// Triggers image loading.
 						synchronized (loadQueue) {
 							loadQueue.addLast(tile);
 							loadQueue.notifyAll();
 						}
-						
-						// Mark tile as "load in progress"
-						tile.paintAttempt = -1;
 					}
 					tp.paint(REPLACEMENT.getImage(), tx << 8, ty << 8);
 
 				} else
-					tp.paint(tile.icon.getImage(), tx << 8, ty << 8);
+					tp.paint(tile.image, tx << 8, ty << 8);
 
 			}
 		}

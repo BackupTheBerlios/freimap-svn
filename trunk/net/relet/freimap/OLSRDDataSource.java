@@ -237,7 +237,7 @@ public class OLSRDDataSource implements DataSource {
         System.err.println("[OLSRDataSource] timeout while trying to connect. "+ex.getMessage());
         return;
       } catch (ConnectException ex) {
-        System.err.println(ex.getMessage()+" ["+host+":"+port+"]");
+        System.err.println("connection to " + host + ":" + port + " failed. Detailed node data won't be available.");
         return;
       } catch (Exception ex) {
         ex.printStackTrace();

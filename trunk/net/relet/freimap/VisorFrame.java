@@ -259,6 +259,8 @@ public class VisorFrame extends JPanel implements DataSourceListener, ComponentL
     g.setColor(cs.getColor(ColorScheme.Key.MAP_BACKGROUND));
     g.fillRect(0,0,w,h);
 
+    tp.setGraphics(g);
+    tileCache.paintTiles(zoom, offsetX, offsetY, w, h);
 
     //draw backgrounds
       for (int i=0;i<bgitems.size();i++) {
@@ -272,9 +274,6 @@ public class VisorFrame extends JPanel implements DataSourceListener, ComponentL
         
         g.drawImage(img, new AffineTransform(rscale,0d,0d,rscale,xc,yc), this);
       }
-    
-    tp.setGraphics(g);
-    tileCache.paintTiles(zoom, offsetX, offsetY, w, h);
         
     //draw links
     Stroke linkStroke = new BasicStroke((float)(Math.min(5,0.00005 * scale)), BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
@@ -630,6 +629,10 @@ public class VisorFrame extends JPanel implements DataSourceListener, ComponentL
 	  // Geo coordinates -> new view offset
 	  offsetX = (int) coordinateSystem.lonToX(lon) - viewX;
 	  offsetY = (int) coordinateSystem.latToY(lat) - viewY;
+	  
+	  // Updates the tile cache's current visible zoom so that
+	  // it prioritizes loading those tiles.
+	  tileCache.setZoom(zoom);
   }
   
   private void setScale(boolean increase, int worldX, int worldY) {
