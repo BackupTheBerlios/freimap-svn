@@ -57,7 +57,7 @@ public class Tile {
   /**
    * Amount of time to pass until a tile is actually loaded.
    */
-  final static long LOAD_AGE = 5000; 
+  final static long LOAD_TIMEOUT = 2500; 
 
   public Tile (URL url, int zoom, int x, int y) {
     this.url = url;
@@ -76,7 +76,7 @@ public class Tile {
 		  state = State.WAITING;
 	  } else if(state == State.WAITING)
 	  {
-		  if (System.currentTimeMillis() - startTime > LOAD_AGE)
+		  if (System.currentTimeMillis() - startTime > LOAD_TIMEOUT)
 		  {
 			  state = State.SCHEDULED;
 			  return true;
@@ -95,7 +95,9 @@ public class Tile {
 	  }
 	  catch (IOException _)
 	  {
+		  System.err.println("failed: " + url);
 		  state = State.CREATED;
+		  startTime = System.currentTimeMillis();
 	  }
   }
   

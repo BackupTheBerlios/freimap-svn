@@ -34,8 +34,11 @@ public class Configurator {
   };
 
   private static final String[][] CONFIG_DEFAULTS = new String[][]{
-    {"DataSource", "net.relet.freimap.OLSRDDataSource", "# net.relet.freimap.{OLSRDDataSource|MysqlDataSource}"},
+    {"DataSource", "net.relet.freimap.FreifunkMapDataSource", "# net.relet.freimap.{FreifunkMap|OLSRD|Mysql}DataSource"},
+    {"#DataSource", "net.relet.freimap.OLSRDDataSource", ""},
     {"#DataSource", "net.relet.freimap.MysqlDataSource", ""},
+    {"ffmds.url", "file:data/sample-map-berlin-20070519.xml", "# Sample data"},
+    {"#ffmds.url", "http://map.olsrexperiment.de/freifunkmap.php?getArea=52.6351465262243,13.718490600585938,52.39278242102423,13.1011962890625&z=19", ""},
     {"yaml.url", "http://ffsomething.somewhere.tld", "# url of the ffsomething yaml server"},
     {"olsrd.host", "localhost", "# hostname"},
     {"olsrd.port", "2004", "# port"},
@@ -48,8 +51,8 @@ public class Configurator {
     {"mysql.tables.links", "links", "# table name for link data"},
     {"background.count", "1", "# background picture count"},
     {"background.1.gfx", "/gfx/cbase.png", "# background picture"},
-    {"background.1.lon", "52.520869", "# longitude of center of background"},
-    {"background.1.lat", "13.409457", "# latitude"},
+    {"background.1.lat", "52.520869", "# latitude of center of background"},
+    {"background.1.lon", "13.409457", "# longitude of center of background"},
     {"background.1.scale", "40000", "# scale - you need to experiment here"},
   };
   public static Hashtable<String,String> config=new Hashtable<String,String>();
