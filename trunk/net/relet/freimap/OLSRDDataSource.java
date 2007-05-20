@@ -69,7 +69,7 @@ public class OLSRDDataSource implements DataSource {
       return nodes;
     } else {
       try {
-        ObjectInputStream ois=new ObjectInputStream(getClass().getResourceAsStream(Configurator.get("olsrd.nodefile")));
+        ObjectInputStream ois=new ObjectInputStream(ClassLoader.getSystemResourceAsStream(Configurator.get("olsrd.nodefile")));
         Vector<FreiNode> nodes = (Vector<FreiNode>)ois.readObject();
         ois.close();
         for (int i=0;i<nodes.size();i++) { 

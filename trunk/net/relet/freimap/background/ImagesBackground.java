@@ -14,19 +14,17 @@ class ImagesBackground extends Background {
 	Vector<Element> bgitems = new Vector<Element>();
 
 	ImagesBackground() {
-		int num = Configurator.getI("background.count");
+		int num = Configurator.getI("image.count");
 		for (int i = 1; i <= num; i++) {
 			bgitems.addElement(new Element(
-					new ImageIcon(getClass().getResource(
-							Configurator.get("background." + i + ".gfx"))), // this
-																			// might
-																			// crash
-					Configurator.getD("background." + i + ".lon"), Configurator
-							.getD("background." + i + ".lat"), Configurator
-							.getD("background." + i + ".scale")));
+					new ImageIcon(ClassLoader.getSystemResource(
+							Configurator.get("image." + i + ".gfx"))), // this might crash
+					Configurator.getD("image." + i + ".lon"), Configurator
+							.getD("image." + i + ".lat"), Configurator
+							.getD("image." + i + ".scale")));
 
 			System.out.println("created background image: "
-					+ Configurator.get("background." + i + ".gfx"));
+					+ Configurator.get("image." + i + ".gfx"));
 		}
 	}
 

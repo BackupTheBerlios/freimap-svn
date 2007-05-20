@@ -19,7 +19,7 @@ import net.relet.freimap.OSMMercatorProjection;
  * @author Robert Schuster
  * 
  */
-public class TileCache extends Thread {
+class TileCache extends Thread {
 
 	public static final String TILE_SERVER_URL = "http://tile.openstreetmap.org/mapnik/";
 
