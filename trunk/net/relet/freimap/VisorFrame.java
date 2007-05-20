@@ -72,8 +72,6 @@ todo dimension -> configfile
 public class VisorFrame extends JPanel implements DataSourceListener, ComponentListener, ActionListener, MouseListener, MouseMotionListener, MouseWheelListener {
   double scale=1.0d; // current scaling
   
-  int offsetX = 0;
-  int offsetY = 0;
   int zoom = 0;
   
   Vector<FreiNode> nodes; //vector of known nodes
@@ -153,22 +151,10 @@ public class VisorFrame extends JPanel implements DataSourceListener, ComponentL
     links = source.getLinks(firstUpdateTime);
     System.out.println("("+(System.currentTimeMillis()-now)+"ms)");
     
-    double lonmin = Double.POSITIVE_INFINITY,
-           lonmax = Double.NEGATIVE_INFINITY,
-           latmin = Double.POSITIVE_INFINITY,
-           latmax = Double.NEGATIVE_INFINITY;
-    for (int i=0;i<nodes.size();i++) {
-      FreiNode node=(FreiNode)nodes.elementAt(i);
-      if (node.lon<lonmin) lonmin=node.lon;
-      if (node.lon>lonmax) lonmax=node.lon;
-      if (node.lat<latmin) latmin=node.lat;
-      if (node.lat>latmax) latmax=node.lat;
-    }
-    
     initZoom(0, cx, cy);
     scale=converter.getScale();
 
-    FreiNode[] anodes=(nodes.toArray(new FreiNode[0]));
+    FreiNode[] anodes=(nodes.toArray(new FreiNode[nodes.size()]));
     Arrays.sort(anodes);
     tfsearch = new JComboBox(anodes);
 
@@ -222,7 +208,7 @@ public class VisorFrame extends JPanel implements DataSourceListener, ComponentL
     for (int i=0;i<nodes.size();i++) {
       node = nodes.elementAt(i);
       if (node.id.equals(query)) {
-    	  updateOffsets(converter.lonToWorld(node.lon) - cx, converter.latToWorld(node.lat) - cy);
+    	  converter.setWorld(converter.lonToWorld(node.lon) - cx, converter.latToWorld(node.lat) - cy);
     	  return;
       }
     }
@@ -551,52 +537,17 @@ public class VisorFrame extends JPanel implements DataSourceListener, ComponentL
   public void saveScale() {
     refscale=scale;
   }
-   
-  private int viewToWorldX(int x)
-  {
-	  return x + offsetX;
-  }
-  
-  private int viewToWorldY(int y)
-  {
-	  return y + offsetY;
-  }
   
   private void initZoom(int zoom, int viewX, int viewY)
   {
-	  if (converter.projection == null)
-		  converter.setProjection(new OSMMercatorProjection(0));
-	  
-	  // We want to zoom in on the center of our current screen.
-	  // Therefore we calculate the centers' lon|lat, set up
-	  // the new projection and then calculate the new
-	  // offsets.
-	  
-	  double lon = converter.projection.xToLong(offsetX + viewX); 
-	  double lat = converter.projection.yToLat(offsetY + viewY);
-	  
-	  converter.setProjection(new OSMMercatorProjection(zoom));
-	  
-	  // Geo coordinates -> new view offset
-	  updateOffsets((int) converter.lonToWorld(lon) - viewX, (int) converter.latToWorld(lat) - viewY);
-  }
-  
-  private void updateOffsetsRel(int relX, int relY)
-  {
-	  updateOffsets(offsetX + relX, offsetY + relY);
-  }
-  
-  private void updateOffsets(int newX, int newY)
-  {
-	  offsetX = newX;
-	  offsetY = newY;
-
-	  background.setWorld(zoom, offsetX, offsetY);
-	  converter.setWorld(offsetX, offsetY);
+	  converter.initZoom(zoom, viewX, viewY);
+	  background.setZoom(zoom);
   }
   
   private void centerOn(Point p) {
-    updateOffsets(viewToWorldX(p.x) - cx, viewToWorldY(p.y) - cy);
+    converter.setWorld(
+    		converter.viewToWorldX(p.x) - cx,
+    		converter.viewToWorldY(p.y) - cy);
   }
 
   public FreiNode getSelectedNode() {
@@ -744,7 +695,7 @@ public class VisorFrame extends JPanel implements DataSourceListener, ComponentL
     } else {
       switch(mouseMode) {
         case MouseEvent.BUTTON1:
-          updateOffsetsRel(mrefx - mousex, mrefy - mousey);
+          converter.setWorldRel(mrefx - mousex, mrefy - mousey);
           
           mrefx = mousex;
           mrefy = mousey;

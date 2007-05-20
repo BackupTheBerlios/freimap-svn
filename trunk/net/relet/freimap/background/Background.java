@@ -5,41 +5,112 @@ import java.awt.Graphics2D;
 import net.relet.freimap.ColorScheme;
 import net.relet.freimap.Converter;
 
+/**
+ * A <code>Background</code> instance is responsible for painting
+ * the background of the application.
+ * 
+ * <p>An instance keeps track of the section of the world's map the
+ * user is looking at and provides a {@link ColorScheme} to be used
+ * for nodes and links which fits to the colors used by the background
+ * itself.</p>
+ * 
+ * <p>Additionally the class provides various factory methods to create
+ * an instance of a certain <code>Background</code> implementation.</p>
+ * 
+ * 
+ * @author Robert Schuster <robertschuster@fsfe.org>
+ *
+ */
 public abstract class Background {
 
-	protected int zoom, x, y, width, height;
+	protected int zoom, width, height;
 	
 	protected Converter converter;
 	
+	/**
+	 * Sets the {@link Converter} instance to be used for this
+	 * <code>Background</code>. This method must be called at least
+	 * once with a non-null value.
+	 * 
+	 * @param conv
+	 */
 	public final void setConverter(Converter conv)
 	{
 		converter = conv;
 	}
 
+	/**
+	 * Sets the width and height of the section the background is
+	 * showing.
+	 * 
+	 * <p>This method must be called whenever the size changes
+	 * otherwise calculations will get incorrect and drawing problems
+	 * may occur.</p>
+	 * 
+	 * @param w
+	 * @param h
+	 */
 	public final void setDimension(int w, int h) {
 		width = w;
 		height = h;
 	}
 
-	public final void setWorld(int z, int x, int y) {
-		zoom = z;
-		this.x = x;
-		this.y = y;
-		worldUpdated();
+	/**
+	 * Sets the <code>Background</code>s zoom.
+	 * 
+	 * <p>This method must be called whenever the zoom changes
+	 * otherwise calculations will get incorrect and drawing problems
+	 * may occur.</p>
+	 * 
+	 * @param zoom
+	 */
+	public final void setZoom(int zoom) {
+		this.zoom = zoom;
+		zoomUpdated();
 	}
 	
-	protected void worldUpdated()
+	/**
+	 * This method is called whenever {@link #setZoom(int)}
+	 * was called.
+	 * 
+	 * <p>Subclasses are encouraged to override this method to react
+	 * upon changes to the zoom.</p>
+	 *
+	 */
+	protected void zoomUpdated()
 	{
 		// To be overwritten by subclasses.
 	}
 	
+	/**
+	 * Retrieves a {@link ColorScheme} instance which is suitable for displaying
+	 * nodes and links on top of this background.
+	 * 
+	 * <p>The default implementation returns {@link ColorScheme#NO_MAP}.</p>
+	 * 
+	 * <p>Subclasses should override this method if needed.</p>
+	 * 
+	 * @return
+	 */
 	public ColorScheme getColorScheme()
 	{
 		return ColorScheme.NO_MAP;
 	}
 
+	/**
+	 * Paints the background.
+	 * 
+	 * <p>Subclasses must implement this method.</p>
+	 * 
+	 * @param g
+	 */
 	public abstract void paint(Graphics2D g);
 
+	/**
+	 * Creates a <code>Background</code> which paints nothing.
+	 * 
+	 * @return
+	 */
 	public static Background createBlankBackground() {
 		return new Background() {
 			public void paint(Graphics2D g) {
@@ -47,15 +118,37 @@ public abstract class Background {
 		};
 	}
 
+	/**
+	 * Creates a <code>Background</code> which paints 
+	 * OpenStreetMap tiles.
+	 * 
+	 * @return
+	 */
 	public static Background createOpenStreetMapBackground() {
 		return new OpenStreetMapBackground();
 	}
 	
+	/**
+	 * Creates a <code>Background</code> which paints static images.
+	 * 
+	 * @return
+	 */
 	public static Background createImagesBackground()
 	{
 		return new ImagesBackground();
 	}
 
+	/**
+	 * Evaluates the given <code>String</code> and creates
+	 * an instance according to its value.
+	 * 
+	 * <p>If the value is <code>null</code> or not known the
+	 * <code>Background</code> implementation which paints
+	 * nothing is chosen.
+	 * 
+	 * @param type
+	 * @return
+	 */
 	public static Background createBackground(String type) {
 		if (type == null) {
 			System.err.println("warning: no background specified. Defaulting to blank.");

@@ -82,7 +82,7 @@ class TileCache extends Thread {
 			cache.put(key(zoom, tx, ty), e);
 		} catch (MalformedURLException e) {
 			// Unexpected
-			System.err.println("failed: " + e);
+			System.err.println("invalid url: " + e);
 		}
 	}
 

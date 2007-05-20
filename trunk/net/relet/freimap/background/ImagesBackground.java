@@ -9,6 +9,13 @@ import javax.swing.ImageIcon;
 
 import net.relet.freimap.Configurator;
 
+/**
+ * A {@link Background} implementation which displays images at certain
+ * geographical locations.
+ * 
+ * <p>The images are specified within the configuration file.</p>
+ * 
+ */
 class ImagesBackground extends Background {
 
 	Vector<Element> bgitems = new Vector<Element>();

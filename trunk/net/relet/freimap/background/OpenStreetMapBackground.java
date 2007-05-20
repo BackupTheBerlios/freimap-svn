@@ -5,6 +5,13 @@ import java.awt.Image;
 
 import net.relet.freimap.ColorScheme;
 
+/**
+ * A {@link Background} implementation which paints tiles
+ * from OpenStreetMap.
+ * 
+ * @author Robert Schuster <robertschuster@fsfe.org>
+ *
+ */
 class OpenStreetMapBackground extends Background {
 	TileCache tileCache;
 
@@ -20,10 +27,10 @@ class OpenStreetMapBackground extends Background {
 	}
 
 	public void paint(Graphics2D g) {
-		tileCache.paintTiles(g, zoom, x, y, width, height);
+		tileCache.paintTiles(g, zoom, converter.offsetX, converter.offsetY, width, height);
 	}
 	
-	protected void worldUpdated()
+	protected void zoomUpdated()
 	{
 		tileCache.setZoom(zoom);
 	}
