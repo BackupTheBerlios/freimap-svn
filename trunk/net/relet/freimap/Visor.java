@@ -22,11 +22,14 @@
 
 package net.relet.freimap;
 
-import java.util.*;
-import java.awt.*;
-import java.awt.event.*;
-import javax.swing.*;
-import java.lang.reflect.*;
+import java.awt.Color;
+import java.awt.Container;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
+
+import javax.swing.JFrame;
+
+import net.relet.freimap.background.Background;
 
 public class Visor extends JFrame implements WindowListener {
   public static Configurator config;
@@ -34,23 +37,27 @@ public class Visor extends JFrame implements WindowListener {
   public static void main(String[] args) {
     config=new Configurator();
     
-    DataSource source;
+    DataSource source = null;
     try {
       Class<DataSource> csource=(Class<DataSource>)Class.forName(config.get("DataSource")); //this cast cannot be checked!
       source = csource.newInstance();
-      new Visor(source);
     } catch (Exception ex) {
       ex.printStackTrace();
+      return;
     }
+    
+    Background bg = Background.createBackground(Configurator.get("background"));
+    
+    new Visor(source, bg);
   }
   
   VisorFrame viz;
   DataSource source;
   
-  public Visor(DataSource source) {
+  public Visor(DataSource source, Background background) {
     super("freimap.berlios.de / (c)opyleft thomas hirsch");
     this.source=source;
-    viz=new VisorFrame(source);
+    viz=new VisorFrame(source, background);
     Container c = this.getContentPane();
     c.add(viz);
     c.setBackground(Color.black);

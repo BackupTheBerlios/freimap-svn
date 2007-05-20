@@ -1,11 +1,14 @@
-package net.relet.freimap;
+package net.relet.freimap.background;
 
+import java.awt.Graphics2D;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.LinkedList;
 
 import javax.swing.ImageIcon;
+
+import net.relet.freimap.OSMMercatorProjection;
 
 /**
  * In a distant future this class will be a fully featured cache for downloaded
@@ -66,9 +69,6 @@ public class TileCache extends Thread {
 			System.err.println("fetching image:" + t.url);
 			
 			t.loadImage();
-			
-			tp.update();
-
 		}
 	}
 
@@ -95,7 +95,7 @@ public class TileCache extends Thread {
 		zoom = z;
 	}
 
-	void paintTiles(int zoom, int wx, int wy, int ww, int wh) {
+	void paintTiles(Graphics2D g, int zoom, int wx, int wy, int ww, int wh) {
 		int max = (int) Math.pow(2, zoom) - 1;
 		int x1 = OSMMercatorProjection.worldToTile(Math.max(wx, 0)); 
 		int x2 = Math.min(OSMMercatorProjection.worldToTile(wx + ww), max); 
@@ -107,7 +107,7 @@ public class TileCache extends Thread {
 				Tile tile = cache.get(key(zoom, tx, ty));
 				if (tile == null) {
 					createTile(zoom, tx, ty);
-					tp.paint(REPLACEMENT.getImage(), tx << 8, ty << 8);
+					tp.paint(g, REPLACEMENT.getImage(), tx << 8, ty << 8);
 				} else if (tile.image == null) {
 					// Image is not there.
 					
@@ -119,10 +119,10 @@ public class TileCache extends Thread {
 							loadQueue.notifyAll();
 						}
 					}
-					tp.paint(REPLACEMENT.getImage(), tx << 8, ty << 8);
+					tp.paint(g, REPLACEMENT.getImage(), tx << 8, ty << 8);
 
 				} else
-					tp.paint(tile.image, tx << 8, ty << 8);
+					tp.paint(g, tile.image, tx << 8, ty << 8);
 
 			}
 		}

@@ -13,8 +13,8 @@ public class ColorScheme
 	 NODE_HIGHLIGHT;
 	}
 	
-	static final ColorScheme NO_MAP = new ColorScheme();
-	static final ColorScheme OSM_MAP = new ColorScheme();
+	public static final ColorScheme NO_MAP = new ColorScheme();
+	public static final ColorScheme OSM_MAP = new ColorScheme();
 	
 	static
 	{

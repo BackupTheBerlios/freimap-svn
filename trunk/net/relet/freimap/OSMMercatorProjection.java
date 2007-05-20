@@ -166,12 +166,12 @@ public final class OSMMercatorProjection {
 		return latToY(latitude) >>> 8;
 	}
 	
-	static int worldToTile(int w)
+	public final static int worldToTile(int w)
 	{
 		return w >>> 8;
 	}
 	
-	static int tileToWorld(int t)
+	public final static int tileToWorld(int t)
 	{
 		return t << 8;
 	}

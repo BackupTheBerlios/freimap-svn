@@ -20,7 +20,7 @@
   Suite 330, Boston, MA 02111-1307 USA
 */
 
-package net.relet.freimap;
+package net.relet.freimap.background;
 
 import java.awt.Image;
 import java.io.IOException;
