@@ -728,10 +728,9 @@ public class VisorFrame extends JPanel implements DataSourceListener, ComponentL
   public void mouseReleased(MouseEvent e) {}
 
   public void nextFrame() {
-/*
 	  //begin: this should move into repaint block
-    offsetX = (offsetX * 3 + targetOffsetX) / 4;
-    offsetY = (offsetY * 3 + targetOffsetY) / 4;
+    ///offsetX = (offsetX * 3 + targetOffsetX) / 4;
+    //offsetY = (offsetY * 3 + targetOffsetY) / 4;
     // end
     //crtTime += 100;
     if (playing) crtTime += 1;
@@ -742,7 +741,6 @@ public class VisorFrame extends JPanel implements DataSourceListener, ComponentL
       this.repaint();
     } 
     oldTime = closestTime;
-    */
   }
 
   //XStream xstream = new XStream();

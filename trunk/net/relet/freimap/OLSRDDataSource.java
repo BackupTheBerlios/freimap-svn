@@ -119,7 +119,8 @@ public class OLSRDDataSource implements DataSource {
   }
   
   public Vector<FreiLink> getLinks(long time) {
-    return data.get(new Long(time));
+    Vector<FreiLink> linkdata = data.get(new Long(time));
+    return linkdata;
   }
   //threaded information fetching
   public void addDataSourceListener(DataSourceListener dsl) {
