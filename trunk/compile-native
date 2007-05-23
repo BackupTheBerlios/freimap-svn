@@ -1,0 +1,18 @@
+#!/bin/sh
+# Compiles freimap into a native executable using GCJ.
+FLAGS="-findirect-dispatch -fpic -fPIC -O3"
+MAIN="net.relet.freimap.Visor"
+
+if [ ! -e freimap.jar ]; then
+  echo "freimap.jar does not exist. Please run compile first!"
+  exit 1
+fi
+
+echo "Compiling libraries"
+gcj -c -o libfreimap.o lib/*.jar $FLAGS
+
+echo "Compiling app"
+gcj -c -o freimap.o freimap.jar $FLAGS
+
+echo "Linking app"
+gcj --main=$MAIN -o freimap freimap.o libfreimap.o
