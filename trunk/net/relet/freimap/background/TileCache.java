@@ -66,7 +66,7 @@ class TileCache extends Thread {
 			if (t.zoom != zoom)
 				continue;
 
-			System.err.println("fetching image:" + t.url);
+			//System.err.println("fetching image:" + t.url);
 			
 			t.loadImage();
 		}

@@ -22,12 +22,17 @@
 
 package net.relet.freimap.background;
 
+
 import java.awt.*;
 import java.awt.image.*;
-import java.io.IOException;
+import java.io.*;
 import java.net.URL;
 
+import java.security.*;
+import java.util.Formatter;
+
 import javax.imageio.ImageIO;
+import net.relet.freimap.Configurator;
 
 public class Tile {
   Image image;
@@ -38,6 +43,8 @@ public class Tile {
   final int zoom;
   
   long startTime = -1;
+
+  static String cacheDir = Configurator.get("background.cache.dir");
   
   /**
    * Amount of KiB an image consumes in memory.
@@ -58,7 +65,7 @@ public class Tile {
   /**
    * Amount of time to pass until a tile is actually loaded.
    */
-  final static long LOAD_TIMEOUT = 2500; 
+  final static long LOAD_TIMEOUT = Configurator.getI("background.delay"); 
 
   public Tile (URL url, int zoom, int x, int y) {
     this.url = url;
@@ -89,10 +96,29 @@ public class Tile {
   
   void loadImage()
   {
-	  try
-	  {
-	    image = makeImageBlack(ImageIO.read(url));
+	BufferedImage bfimage = null;
+	  try {
+            String hash = getMD5Hash(url.toString());
+            File cacheFile = new File(cacheDir + "/" + hash);
+	    if (cacheDir != null) {
+	      //query disk cache before loading
+              try {
+  	        bfimage = ImageIO.read(cacheFile);
+		//if (bfimage != null) System.out.println("got tile from cache!");
+              } catch (Exception _) {
+              }
+            }
+	    //else query server
+	    if (bfimage == null) bfimage = ImageIO.read(url);
+            //modify colors to match color scheme
+	    image = makeImageBlack(bfimage);
 	    state = State.LOADED;
+            if (cacheDir != null) 
+	      try {
+                ImageIO.write(bfimage, "png", cacheFile);
+	      } catch (Exception ex) {
+                System.err.println(ex.getMessage());
+              };
 	  }
 	  catch (IOException _)
 	  {
@@ -100,6 +126,21 @@ public class Tile {
 		  state = State.CREATED;
 		  startTime = System.currentTimeMillis();
 	  }
+  }
+
+  public static String getMD5Hash(String in) {
+    StringBuffer result = new StringBuffer(32);
+    try {
+      MessageDigest md5 = MessageDigest.getInstance("MD5");
+      md5.update(in.getBytes());
+      Formatter f = new Formatter(result);
+      for (byte b : md5.digest()) {
+        f.format("%02x", b);
+      }
+    } catch (NoSuchAlgorithmException ex) {
+      ex.printStackTrace();
+    }
+    return result.toString();
   }
   
   static ImageFilter subtractWhite = new RGBImageFilter() {
