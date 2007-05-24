@@ -37,6 +37,7 @@ class OpenStreetMapBackground extends Background {
 
 	public ColorScheme getColorScheme()
 	{
-		return ColorScheme.OSM_MAP;
+		return ColorScheme.NO_MAP;
+		//return ColorScheme.OSM_MAP;
 	}
 }

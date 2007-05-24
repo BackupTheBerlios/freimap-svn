@@ -23,15 +23,16 @@ class ImagesBackground extends Background {
 	ImagesBackground() {
 		int num = Configurator.getI("image.count");
 		for (int i = 1; i <= num; i++) {
-			bgitems.addElement(new Element(
-					new ImageIcon(ClassLoader.getSystemResource(
-							Configurator.get("image." + i + ".gfx"))), // this might crash
-					Configurator.getD("image." + i + ".lon"), Configurator
+			String iname = Configurator.get("image." + i + ".gfx");
+ 			ImageIcon ii = new ImageIcon(ClassLoader.getSystemResource(iname));
+			if (ii!=null) {
+				bgitems.addElement(new Element(ii,				
+					    Configurator.getD("image." + i + ".lon"), Configurator
 							.getD("image." + i + ".lat"), Configurator
 							.getD("image." + i + ".scale")));
-
-			System.out.println("created background image: "
-					+ Configurator.get("image." + i + ".gfx"));
+			} else {
+				System.err.println("Could not create background image: "+ iname);
+                        }
 		}
 	}
 
@@ -65,5 +66,5 @@ class ImagesBackground extends Background {
 		    this.scale=scale;
 		  }
 		  
-		}
+	}
 }

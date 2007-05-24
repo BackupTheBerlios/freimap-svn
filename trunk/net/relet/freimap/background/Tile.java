@@ -22,7 +22,8 @@
 
 package net.relet.freimap.background;
 
-import java.awt.Image;
+import java.awt.*;
+import java.awt.image.*;
 import java.io.IOException;
 import java.net.URL;
 
@@ -90,7 +91,7 @@ public class Tile {
   {
 	  try
 	  {
-	    image = ImageIO.read(url);
+	    image = makeImageBlack(ImageIO.read(url));
 	    state = State.LOADED;
 	  }
 	  catch (IOException _)
@@ -101,6 +102,28 @@ public class Tile {
 	  }
   }
   
+  static ImageFilter subtractWhite = new RGBImageFilter() {
+    final static int OPAQUE = 0xff000000;
+    final static int RGB    = 0x00ffffff;
+    final static int WHITE  = 0xffffffff;
+    public final int filterRGB(int x, int y, int argb) {
+      int rgb = argb & RGB;
+      int r = (rgb & 0xff0000) >> 16;
+      int g = (rgb & 0x00ff00) >> 8;
+      int b = (rgb & 0x0000ff);
+      if ((r<96) && (g<96) && (b<96)) return OPAQUE + (RGB - rgb);
+      int min = Math.min(r,Math.min(g,b)); 
+      return ((0xff - min) << 24) + rgb;
+    }
+  };
+	
+  static Image makeImageBlack (Image i) {
+    if ((i == null) || (i.getSource() == null)) return null;
+    ImageProducer ip = new FilteredImageSource(i.getSource(), subtractWhite);
+    return Toolkit.getDefaultToolkit().createImage(ip);
+  }
+
+
   /**
    * Returns an image of the current tile.
    * 
