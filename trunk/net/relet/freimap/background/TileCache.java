@@ -22,8 +22,19 @@ import net.relet.freimap.OSMMercatorProjection;
  */
 class TileCache extends Thread {
 
-	public static final String TILE_SERVER_URL = "http://tile.openstreetmap.org/mapnik/";
-
+	public static String TILE_SERVER_URL;
+        static {
+		String tileServer = Configurator.get("background.osm.tileserver");
+		if ((tileServer == null)||(tileServer.equals("mapnik"))) {
+			TILE_SERVER_URL = "http://tile.openstreetmap.org/mapnik/";
+		} else if (tileServer.equals("osmarender")) {
+			TILE_SERVER_URL = "http://dev.openstreetmap.org/~ojw/Tiles/tile.php/";
+		} else {
+			System.out.println("Unknown tile server. Using user provided URL "+tileServer);
+			TILE_SERVER_URL = tileServer;
+		}
+	}
+        
 	HashMap<Long, Tile> cache = new HashMap<Long, Tile>();
 
 	private ImageIcon REPLACEMENT;

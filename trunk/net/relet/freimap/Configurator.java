@@ -40,6 +40,7 @@ public class Configurator {
     {"background", "blank", "# Use blank, images or openstreetmap" },
     {"background.osm.delay", "2500", "# wait this number of milliseconds before fetching background tiles"}, 
     {"#background.osm.filter", "dark", "# apply a colour filter to openstreetmap tiles (use 'dark' or 'none')"}, 
+    {"#background.osm.tileserver", "mapnik", "# OpenStreetMap map server: 'mapnik' (default), 'osmarender' or URL"}, 
     {"#background.osm.cache.dir", "./cache", "# if given, background map tiles will be cached here. CAUTION! caching will eat your disk space. Make sure the directory exists." },
     {"ffmds.url", "file:data/sample-map-berlin-20070519.xml", "# Sample data"},
     {"#ffmds.url", "http://map.olsrexperiment.de/freifunkmap.php?getArea=52.6351465262243,13.718490600585938,52.39278242102423,13.1011962890625&z=19", ""},
