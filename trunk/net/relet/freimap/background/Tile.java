@@ -153,6 +153,8 @@ public class Tile {
     return result.toString();
   }
   
+  static int not (int a) { return 0xff ^ a; }
+ 
   static ImageFilter subtractWhite = new RGBImageFilter() {
     final static int OPAQUE = 0xff000000;
     final static int RGB    = 0x00ffffff;
@@ -162,9 +164,10 @@ public class Tile {
       int r = (rgb & 0xff0000) >> 16;
       int g = (rgb & 0x00ff00) >> 8;
       int b = (rgb & 0x0000ff);
-      if ((r<96) && (g<96) && (b<96)) return OPAQUE + (RGB - rgb);
-      int min = Math.min(r,Math.min(g,b)); 
-      return ((0xff - min) << 24) + rgb;
+      int nr = (not(g) & not(b)) | (r & not(g)) | (r & not(b));
+      int ng = (not(r) & not(b)) | (not(r) & g) | (g & not(b));
+      int nb = (not(r) & not(g)) | (not(r) & b) | (not(g) & b);
+      return (OPAQUE + (nr << 16) + (ng << 8) + nb);
     }
   };
 	
