@@ -44,8 +44,21 @@ public class Tile {
   
   long startTime = -1;
 
-  static String cacheDir = Configurator.get("background.cache.dir");
-  
+  /**
+   * Where to cache background tiles, or null if disabled.
+   */
+  static String cacheDir = Configurator.get("background.osm.cache.dir");
+  /**
+   * Background colour filter to be applied
+   */
+  static String filter = Configurator.get("background.osm.filter");
+  final static String FILTER_DARK = "dark";
+  /**
+   * Amount of time to pass until a tile is actually loaded.
+   */
+  final static long LOAD_TIMEOUT = Configurator.getI("background.osm.delay"); 
+   
+
   /**
    * Amount of KiB an image consumes in memory.
    * 
@@ -62,10 +75,6 @@ public class Tile {
   
   State state;
   
-  /**
-   * Amount of time to pass until a tile is actually loaded.
-   */
-  final static long LOAD_TIMEOUT = Configurator.getI("background.delay"); 
 
   public Tile (URL url, int zoom, int x, int y) {
     this.url = url;
@@ -111,7 +120,8 @@ public class Tile {
 	    //else query server
 	    if (bfimage == null) bfimage = ImageIO.read(url);
             //modify colors to match color scheme
-	    image = makeImageBlack(bfimage);
+	    if (filter.equals(FILTER_DARK)) image = makeImageBlack(bfimage);
+            else image=bfimage;
 	    state = State.LOADED;
             if (cacheDir != null) 
 	      try {

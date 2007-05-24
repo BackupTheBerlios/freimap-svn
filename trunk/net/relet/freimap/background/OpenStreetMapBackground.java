@@ -4,6 +4,7 @@ import java.awt.Graphics2D;
 import java.awt.Image;
 
 import net.relet.freimap.ColorScheme;
+import net.relet.freimap.Configurator;
 
 /**
  * A {@link Background} implementation which paints tiles
@@ -37,7 +38,10 @@ class OpenStreetMapBackground extends Background {
 
 	public ColorScheme getColorScheme()
 	{
-		return ColorScheme.NO_MAP;
-		//return ColorScheme.OSM_MAP;
+		String filter = Configurator.get("background.osm.filter");
+		if ((filter!=null)&&(filter.equals("dark"))) {
+			return ColorScheme.NO_MAP;
+		}
+		return ColorScheme.OSM_MAP;
 	}
 }

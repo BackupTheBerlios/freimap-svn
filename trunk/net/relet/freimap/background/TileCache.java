@@ -8,6 +8,7 @@ import java.util.LinkedList;
 
 import javax.swing.ImageIcon;
 
+import net.relet.freimap.Configurator;
 import net.relet.freimap.OSMMercatorProjection;
 
 /**
@@ -36,8 +37,10 @@ class TileCache extends Thread {
 	TileCache(TilePainter tp) {
 		this.tp = tp;
 
+		String bgfilter = Configurator.get("background.osm.filter");
+		String resource = (bgfilter != null) && (bgfilter.equals("dark")) ? "gfx/loading_black.png" : "gfx/loading_white.png";
 		REPLACEMENT = new ImageIcon(ClassLoader
-				.getSystemResource("gfx/loading.png"));
+				.getSystemResource(resource));
 
 		setDaemon(true);
 
