@@ -156,7 +156,7 @@ public class Tile {
   static int not (int a) { return 0xff ^ a; }
  
   static ImageFilter subtractWhite = new RGBImageFilter() {
-    final static int OPAQUE = 0xff000000;
+    final static int OPAQUE = 0x80000000;
     final static int RGB    = 0x00ffffff;
     final static int WHITE  = 0xffffffff;
     public final int filterRGB(int x, int y, int argb) {

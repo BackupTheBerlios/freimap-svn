@@ -35,13 +35,31 @@ public class OLSRDDataSource implements DataSource {
   
   long lastUpdateTime = 1, 
        firstUpdateTime = 1;
+  String nodefile;
   
   MysqlDataSource mysqlSource;
+  FreifunkMapDataSource ffmdSource;
+
   boolean useMysqlSource = false;
+  boolean useFFMDSource = false;
        
   public OLSRDDataSource() {
     String host = Configurator.get("olsrd.host");
     String sport= Configurator.get("olsrd.port");
+
+    nodefile = Configurator.get("olsrd.nodefile");
+    System.out.println("nodefile = "+nodefile);
+
+    String nodesource = Configurator.get("olsrd.nodesource");
+
+    if (nodesource != null) {
+      if (nodesource.equals("FreifunkMapDataSource")) {
+        useFFMDSource = true;
+      } else if (nodesource.equals("MysqlDataSource")) {
+        useMysqlSource = true;
+      }
+    }
+
     if (sport==null) { 
       System.err.println("invalid port parameter "+sport);
       System.exit(1);
@@ -55,7 +73,9 @@ public class OLSRDDataSource implements DataSource {
       System.exit(1);
     }
     //fetching node data from Mysqldatasource
-    if (useMysqlSource) mysqlSource=new MysqlDataSource("localhost", "root", "", "freiberlin", true);
+    if (useFFMDSource) ffmdSource=new FreifunkMapDataSource();
+    //fetching node data from Mysqldatasource
+    if (useMysqlSource) mysqlSource=new MysqlDataSource();
     //opening dot plugin connection
     dot = new DotPluginListener(host, port, this);
   }
@@ -67,9 +87,18 @@ public class OLSRDDataSource implements DataSource {
         nodes.add(generatedNodes.get(enu.nextElement()));
       }
       return nodes;
+    } else if (useFFMDSource) {
+      Vector<FreiNode> nodes = ffmdSource.getNodeList();
+      for (Enumeration<String> enu = generatedNodes.keys(); enu.hasMoreElements();) {
+        nodes.add(generatedNodes.get(enu.nextElement()));
+      }
+      for (int i=0;i<nodes.size();i++) { //hack
+        knownNodes.put(nodes.elementAt(i).id, nodes.elementAt(i));
+      }
+      return nodes;
     } else {
       try {
-        ObjectInputStream ois=new ObjectInputStream(ClassLoader.getSystemResourceAsStream(Configurator.get("olsrd.nodefile")));
+        ObjectInputStream ois=new ObjectInputStream(ClassLoader.getSystemResourceAsStream(nodefile));
         Vector<FreiNode> nodes = (Vector<FreiNode>)ois.readObject();
         ois.close();
         for (int i=0;i<nodes.size();i++) { 
@@ -95,6 +124,8 @@ public class OLSRDDataSource implements DataSource {
   public Hashtable<String, Float> getNodeAvailability(long time) {
     if (useMysqlSource) {
       return mysqlSource.getNodeAvailability(time);
+    } else if (useFFMDSource) {
+      return ffmdSource.getNodeAvailability(time);
     } else {
       return new Hashtable<String, Float>(); //empty
     }
@@ -191,48 +222,49 @@ public class OLSRDDataSource implements DataSource {
       try {
         InetSocketAddress destination = new InetSocketAddress(host, port);
         while (true) { //reconnect upon disconnection
-        Socket s = new Socket();
-	//s.setSoTimeout(10000);
-        s.connect(destination, 25000);
-        in = new BufferedReader(new InputStreamReader(s.getInputStream()));
-        while (in!=null) {
-          String line=in.readLine();
-          if (line==null) break;
-          if (line.equals("digraph topology")) {
-            if (linkData!=null) parent.addLinkData(System.currentTimeMillis()/1000, linkData);
-            linkData = new Vector<FreiLink>();
-          } else if ((line.length()>0) && (line.charAt(0)=='"')) {
-            StringTokenizer st=new StringTokenizer(line, "\"", false);
-            String from = st.nextToken();
-            st.nextToken();
-            if (st.hasMoreTokens()) { //otherwise it's a gateway node!
-              String to = st.nextToken();
+          Socket s = new Socket();
+	        //s.setSoTimeout(10000);
+          s.connect(destination, 25000);
+          in = new BufferedReader(new InputStreamReader(s.getInputStream()));
+          while (in!=null) {
+            String line=in.readLine();
+            if (line==null) break;
+            if (line.equals("digraph topology")) {
+              if (linkData!=null) parent.addLinkData(System.currentTimeMillis()/1000, linkData);
+              linkData = new Vector<FreiLink>();
+            } else if ((line.length()>0) && (line.charAt(0)=='"')) {
+              StringTokenizer st=new StringTokenizer(line, "\"", false);
+              String from = st.nextToken();
               st.nextToken();
-              String setx = st.nextToken();
-              boolean hna = setx.equals("HNA"); 
-              float etx = hna?0:Float.parseFloat(setx);
-              FreiNode nfrom = getNodeByName(from),
-                       nto   = getNodeByName(to);
-              if (nfrom == null) {
-                         nfrom = generatedNodes.get(from);
-                         if (nfrom==null) {
-                           nfrom = new FreiNode(from);
-                           generatedNodes.put(from, nfrom);
-                           if (listener!=null) listener.nodeListUpdate(nfrom);
-                         }
+              if (st.hasMoreTokens()) { //otherwise it's a gateway node!
+                String to = st.nextToken();
+                st.nextToken();
+                String setx = st.nextToken();
+                boolean hna = setx.equals("HNA"); 
+                float etx = hna?0:Float.parseFloat(setx);
+                FreiNode nfrom = getNodeByName(from),
+                        nto   = getNodeByName(to);
+                if (nfrom == null) {
+                          nfrom = generatedNodes.get(from);
+                          if (nfrom==null) {
+                            nfrom = new FreiNode(from);
+                            generatedNodes.put(from, nfrom);
+                            if (listener!=null) listener.nodeListUpdate(nfrom);
+                          }
+                }
+                if (nto   == null) {
+                          nto = generatedNodes.get(to);
+                          if (nto==null) {
+                            nto = new FreiNode(to);
+                            generatedNodes.put(to, nto);
+                            if (listener!=null) listener.nodeListUpdate(nto);
+                          }
+                }
+                linkData.add(new FreiLink(nfrom, nto, etx, hna));
               }
-              if (nto   == null) {
-                         nto = generatedNodes.get(to);
-                         if (nto==null) {
-                           nto = new FreiNode(to);
-                           generatedNodes.put(to, nto);
-                           if (listener!=null) listener.nodeListUpdate(nto);
-                         }
-              }
-              linkData.add(new FreiLink(nfrom, nto, etx, hna));
-            }
-          } 
-        }
+            } 
+          }
+          Thread.sleep(1000);
         }
       } catch (SocketTimeoutException ex) {
         System.err.println("[OLSRDataSource] timeout while trying to connect. "+ex.getMessage());

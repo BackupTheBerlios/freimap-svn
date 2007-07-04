@@ -290,14 +290,16 @@ public class VisorFrame extends JPanel implements DataSourceListener, ComponentL
         		  converter.latToViewY(link.to.lat));
         
           if (link.to.unlocated) {
-            link.to.lonsum+=link.from.lon;
-            link.to.latsum+=link.from.lat;
-            link.to.nc++;
+            double netx = (link.etx<1)?0d:1d/link.etx;
+            link.to.lonsum+=link.from.lon*netx;
+            link.to.latsum+=link.from.lat*netx;
+            link.to.nc+= netx;
           }
           if (link.from.unlocated) {
-            link.from.lonsum+=link.to.lon;
-            link.from.latsum+=link.to.lat;
-            link.from.nc++;
+            double netx = (link.etx<1)?0d:1d/link.etx;
+            link.from.lonsum+=link.to.lon * netx;
+            link.from.latsum+=link.to.lat * netx;
+            link.from.nc+= netx;
           }
         }
       }
