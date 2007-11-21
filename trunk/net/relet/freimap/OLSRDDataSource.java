@@ -233,7 +233,7 @@ public class OLSRDDataSource implements DataSource {
               if (line.equals("digraph topology")) {
                 if (linkData!=null) parent.addLinkData(System.currentTimeMillis()/1000, linkData);
                 linkData = new Vector<FreiLink>();
-              } else if ((line.length()>0) && (line.charAt(0)=='"')) {
+              } else if ((linkData != null) && (line.length()>0) && (line.charAt(0)=='"')) {
                 StringTokenizer st=new StringTokenizer(line, "\"", false);
                 String from = st.nextToken();
                 st.nextToken();
@@ -261,11 +261,7 @@ public class OLSRDDataSource implements DataSource {
                               if (listener!=null) listener.nodeListUpdate(nto);
                             }
                   }
-                  if (linkData!=null) {
-                    linkData.add(new FreiLink(nfrom, nto, etx, hna));
-                  } else {
-                    System.out.println("Warning: dataset received from DotPlugin source was probably truncated at the beginning.");
-                  }
+                  linkData.add(new FreiLink(nfrom, nto, etx, hna));
                 }
               } 
             }
