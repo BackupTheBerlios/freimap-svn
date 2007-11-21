@@ -228,41 +228,47 @@ public class OLSRDDataSource implements DataSource {
           in = new BufferedReader(new InputStreamReader(s.getInputStream()));
           while (in!=null) {
             String line=in.readLine();
-            if (line==null) break;
-            if (line.equals("digraph topology")) {
-              if (linkData!=null) parent.addLinkData(System.currentTimeMillis()/1000, linkData);
-              linkData = new Vector<FreiLink>();
-            } else if ((line.length()>0) && (line.charAt(0)=='"')) {
-              StringTokenizer st=new StringTokenizer(line, "\"", false);
-              String from = st.nextToken();
-              st.nextToken();
-              if (st.hasMoreTokens()) { //otherwise it's a gateway node!
-                String to = st.nextToken();
+            { //this used to be a try-catch statement
+              if (line==null) break;
+              if (line.equals("digraph topology")) {
+                if (linkData!=null) parent.addLinkData(System.currentTimeMillis()/1000, linkData);
+                linkData = new Vector<FreiLink>();
+              } else if ((line.length()>0) && (line.charAt(0)=='"')) {
+                StringTokenizer st=new StringTokenizer(line, "\"", false);
+                String from = st.nextToken();
                 st.nextToken();
-                String setx = st.nextToken();
-                boolean hna = setx.equals("HNA"); 
-                float etx = hna?0:Float.parseFloat(setx);
-                FreiNode nfrom = getNodeByName(from),
-                        nto   = getNodeByName(to);
-                if (nfrom == null) {
-                          nfrom = generatedNodes.get(from);
-                          if (nfrom==null) {
-                            nfrom = new FreiNode(from);
-                            generatedNodes.put(from, nfrom);
-                            if (listener!=null) listener.nodeListUpdate(nfrom);
-                          }
+                if (st.hasMoreTokens()) { //otherwise it's a gateway node!
+                  String to = st.nextToken();
+                  st.nextToken();
+                  String setx = st.nextToken();
+                  boolean hna = setx.equals("HNA"); 
+                  float etx = hna?0:Float.parseFloat(setx);
+                  FreiNode nfrom = getNodeByName(from),
+                           nto   = getNodeByName(to);
+                  if (nfrom == null) {
+                            nfrom = generatedNodes.get(from);
+                            if (nfrom==null) {
+                              nfrom = new FreiNode(from);
+                              generatedNodes.put(from, nfrom);
+                              if (listener!=null) listener.nodeListUpdate(nfrom);
+                            }
+                  }
+                  if (nto   == null) {
+                            nto = generatedNodes.get(to);
+                            if (nto==null) {
+                              nto = new FreiNode(to);
+                              generatedNodes.put(to, nto);
+                              if (listener!=null) listener.nodeListUpdate(nto);
+                            }
+                  }
+                  if (linkData!=null) {
+                    linkData.add(new FreiLink(nfrom, nto, etx, hna));
+                  } else {
+                    System.out.println("Warning: dataset received from DotPlugin source was probably truncated at the beginning.");
+                  }
                 }
-                if (nto   == null) {
-                          nto = generatedNodes.get(to);
-                          if (nto==null) {
-                            nto = new FreiNode(to);
-                            generatedNodes.put(to, nto);
-                            if (listener!=null) listener.nodeListUpdate(nto);
-                          }
-                }
-                linkData.add(new FreiLink(nfrom, nto, etx, hna));
-              }
-            } 
+              } 
+            }
           }
           Thread.sleep(1000);
         }
