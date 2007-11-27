@@ -48,7 +48,7 @@ public class OLSRDDataSource implements DataSource {
     String sport= Configurator.get("olsrd.port");
 
     nodefile = Configurator.get("olsrd.nodefile");
-    System.out.println("nodefile = "+nodefile);
+    //System.out.println("nodefile = "+nodefile);
 
     String nodesource = Configurator.get("olsrd.nodesource");
 

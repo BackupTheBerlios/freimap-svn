@@ -381,9 +381,9 @@ public class VisorFrame extends JPanel implements DataSourceListener, ComponentL
         String label;
         Vector<String> infos= new Vector<String>();
         if (showNodeInfo) {
-        	boxw = g.getFontMetrics(mainfont).stringWidth("Node: 999.999.999.999")+20;
+          label = "Node: "+selectedNode.fqid;
+        	boxw = Math.max(180, g.getFontMetrics(mainfont).stringWidth(label)+20);
 
-          label = "Node: "+selectedNode.id;
           Float favail = availmap.get(selectedNode.id);
 	  String savail=(favail==null)?"N/A":Math.round(favail.floatValue()*100)+"%";
 	  infos.add ("Availability: "+savail);

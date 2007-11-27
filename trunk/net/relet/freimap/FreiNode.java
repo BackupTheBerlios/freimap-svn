@@ -27,6 +27,7 @@ import java.io.Serializable;
 
 public class FreiNode implements Comparable, Serializable {
   public String id;
+  public String fqid; //fully qualified identifier - for display only
   public double lon=Double.NaN, lat=Double.NaN;
   public double lonsum=0, latsum=0; //used only for real time interpolation
   public double nc=0;
@@ -36,13 +37,22 @@ public class FreiNode implements Comparable, Serializable {
   public FreiNode() {} //serializable
 
   public FreiNode(String id) {
+    this(id, id); // use id as fqid
+  }
+  public FreiNode(String id, String fqid) {
     this.id=id;
+    this.fqid=fqid;
     lat = 52.520869;// + Math.random()/50-0.01; //when no coordinates are known, generate some around the center of the cbase
     lon = 13.409457;// + Math.random()/50-0.01; //cbase center +- random 0.01
     this.unlocated=true; 
   }
   public FreiNode(String id, double lon, double lat) {
+    this(id, id, lon, lat);
+  }
+
+  public FreiNode(String id, String fqid, double lon, double lat) {
     this.id=id;
+    this.fqid=fqid;
     this.lon=lon;
     this.lat=lat;
   }
@@ -59,6 +69,6 @@ public class FreiNode implements Comparable, Serializable {
     return this.id.equals(((FreiNode)o).id);
   }
   public String toString() {
-    return id;
+    return fqid;
   }
 }

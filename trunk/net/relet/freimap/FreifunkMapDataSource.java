@@ -79,11 +79,20 @@ public class FreifunkMapDataSource implements DataSource {
 
 			String klass = getValue(attr.getNamedItem("class"));
 			String coords = getValue(attr.getNamedItem("coords"));
-			String tooltip = getValue(attr.getNamedItem("tooltip"));
+      String tooltip = getValue(attr.getNamedItem("tooltip"));
+      String ip = getValue(attr.getNamedItem("ip"));
 			
-			// Use coordinates of real tooltip is missing.
-			if (tooltip == null)
-				tooltip = coords;
+			// Use ip or coordinates as fqid if tooltip is missing
+			if (tooltip == null) {
+        if (ip == null) {
+				  tooltip = coords;
+        } else {
+          tooltip = ip;
+        }
+      }
+      if (ip == null) { //for older maps. will still break if both are omitted
+        ip = tooltip;
+      } 
 
 			// Skips old geo data for now.
 			if (klass != null && klass.equals("old"))
@@ -91,8 +100,8 @@ public class FreifunkMapDataSource implements DataSource {
 
 			String[] splitCoords = coords.split("\\s*,\\s*");
 
-			nodes.add(new FreiNode(tooltip, Double.parseDouble(splitCoords[1]),
-					Double.parseDouble(splitCoords[0])));
+      FreiNode nnode = new FreiNode(ip, tooltip, Double.parseDouble(splitCoords[1]), Double.parseDouble(splitCoords[0]));
+			nodes.add(nnode);
 		}
 	}
 
@@ -136,7 +145,6 @@ public class FreifunkMapDataSource implements DataSource {
 	}
 
 	public Vector<FreiNode> getNodeList() {
-		// TODO: Implement me.
 		return nodes;
 	}
 
