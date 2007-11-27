@@ -284,18 +284,18 @@ public class VisorFrame extends JPanel implements DataSourceListener, ComponentL
             green=1/link.etx;
             g.setColor(new Color(1-green, green, 0.5f));
           }
-          g.drawLine(converter.lonToViewX(link.from.lon),
+          if ((link.from.lat != link.from.DEFAULT_LAT) && (link.to.lat != link.to.DEFAULT_LAT))
+            g.drawLine(converter.lonToViewX(link.from.lon),
         		  converter.latToViewY(link.from.lat),
         		  converter.lonToViewX(link.to.lon), 
         		  converter.latToViewY(link.to.lat));
-        
-          if (link.to.unlocated) {
+          if (link.to.unlocated && (link.from.lat != link.from.DEFAULT_LAT)) {
             double netx = (link.etx<1)?0d:1d/link.etx;
             link.to.lonsum+=link.from.lon*netx;
             link.to.latsum+=link.from.lat*netx;
             link.to.nc+= netx;
           }
-          if (link.from.unlocated) {
+          if (link.from.unlocated && (link.to.lat != link.to.DEFAULT_LAT)) {
             double netx = (link.etx<1)?0d:1d/link.etx;
             link.from.lonsum+=link.to.lon * netx;
             link.from.latsum+=link.to.lat * netx;

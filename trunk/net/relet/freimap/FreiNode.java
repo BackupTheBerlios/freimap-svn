@@ -26,6 +26,9 @@ import java.util.HashMap;
 import java.io.Serializable;
 
 public class FreiNode implements Comparable, Serializable {
+  public static double DEFAULT_LAT = 52.520869; //alexanderplatz, berlin, currently.
+  public static double DEFAULT_LON = 13.409457;
+
   public String id;
   public String fqid; //fully qualified identifier - for display only
   public double lon=Double.NaN, lat=Double.NaN;
@@ -42,8 +45,8 @@ public class FreiNode implements Comparable, Serializable {
   public FreiNode(String id, String fqid) {
     this.id=id;
     this.fqid=fqid;
-    lat = 52.520869;// + Math.random()/50-0.01; //when no coordinates are known, generate some around the center of the cbase
-    lon = 13.409457;// + Math.random()/50-0.01; //cbase center +- random 0.01
+    this.lat = DEFAULT_LAT; //when no coordinates are known, place at default position to allow interpolation
+    this.lon = DEFAULT_LON;
     this.unlocated=true; 
   }
   public FreiNode(String id, double lon, double lat) {
