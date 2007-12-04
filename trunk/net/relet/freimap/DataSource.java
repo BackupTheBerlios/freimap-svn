@@ -55,6 +55,7 @@ public interface DataSource {
     @return	A Hashtable mapping Node IDs to a float value between 0 and 1.
 */
   public Hashtable<String, Float> getNodeAvailability(long time);
+
 /** @return	The first unix timestamp which can be displayed. */
   public long getFirstUpdateTime();
 /** @return	The last unix timestamp which can be displayed. */
@@ -64,12 +65,18 @@ public interface DataSource {
     @param	time	A timestamp to be approximated 
     @return	the next best timestamp.
 */
+///** @return The first unix timestamp which has been pre-fetched. */
+//  public long getLastAvailableTime() {}
+///** @return The last unix timestamp which has been pre-fetched. */
+//  public long getFirstAvailableTime() {}
+  
   public long getClosestUpdateTime(long time);
 /** Returns link data for a given timestamp. May return null if the timestamp has not been 
     provided by getClosestUpdateTime.
     @param	time	A timestamp
     @return	All links which should be displayed at this given time.
 */
+
   public Vector<FreiLink> getLinks(long time);
 /** @param 	dsl	A DataSourceListener listening on events from this DataSource */
   public void addDataSourceListener(DataSourceListener dsl);

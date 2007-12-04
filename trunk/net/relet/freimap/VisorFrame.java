@@ -284,7 +284,7 @@ public class VisorFrame extends JPanel implements DataSourceListener, ComponentL
             green=1/link.etx;
             g.setColor(new Color(1-green, green, 0.5f));
           }
-          if ((link.from.lat != link.from.DEFAULT_LAT) && (link.to.lat != link.to.DEFAULT_LAT))
+          if ((link.from.lat != link.from.DEFAULT_LAT) && (link.to.lat != link.to.DEFAULT_LAT)) //ignore links to truly unlocated nodes (at default position)
             g.drawLine(converter.lonToViewX(link.from.lon),
         		  converter.latToViewY(link.from.lat),
         		  converter.lonToViewX(link.to.lon), 

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Hashtable;
+import java.util.StringTokenizer;
 import java.util.LinkedList;
 import java.util.Vector;
 
@@ -81,7 +82,13 @@ public class FreifunkMapDataSource implements DataSource {
 			String coords = getValue(attr.getNamedItem("coords"));
       String tooltip = getValue(attr.getNamedItem("tooltip"));
       String ip = getValue(attr.getNamedItem("ip"));
+
+      // Skips old geo data for now.
+      if (klass != null && klass.equals("old"))
+        continue;
 			
+      if ((ip != null)&&(ip.equals(""))) ip=null; //empty ips == null
+
 			// Use ip or coordinates as fqid if tooltip is missing
 			if (tooltip == null) {
         if (ip == null) {
@@ -90,18 +97,22 @@ public class FreifunkMapDataSource implements DataSource {
           tooltip = ip;
         }
       }
-      if (ip == null) { //for older maps. will still break if both are omitted
+
+      String[] splitCoords = coords.split("\\s*,\\s*");
+
+      if (ip == null) { //we need at least one identifier
         ip = tooltip;
+      } else if (ip.indexOf(',')>-1) {  //someone abused XML to stuff several ips into a single attribute.
+        StringTokenizer stip=new StringTokenizer(ip, ",", false);
+        while (stip.hasMoreTokens()) {
+          String oneip=stip.nextToken();
+          FreiNode nnode = new FreiNode(oneip, tooltip, Double.parseDouble(splitCoords[1]), Double.parseDouble(splitCoords[0]));
+          nodes.add(nnode);
+        }
+        continue;
       } 
-
-			// Skips old geo data for now.
-			if (klass != null && klass.equals("old"))
-				continue;
-
-			String[] splitCoords = coords.split("\\s*,\\s*");
-
       FreiNode nnode = new FreiNode(ip, tooltip, Double.parseDouble(splitCoords[1]), Double.parseDouble(splitCoords[0]));
-			nodes.add(nnode);
+		  nodes.add(nnode);
 		}
 	}
 

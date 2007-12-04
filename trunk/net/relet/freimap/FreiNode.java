@@ -52,7 +52,6 @@ public class FreiNode implements Comparable, Serializable {
   public FreiNode(String id, double lon, double lat) {
     this(id, id, lon, lat);
   }
-
   public FreiNode(String id, String fqid, double lon, double lat) {
     this.id=id;
     this.fqid=fqid;
