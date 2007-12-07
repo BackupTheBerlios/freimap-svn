@@ -24,6 +24,7 @@ package net.relet.freimap;
 
 import java.io.*;
 import java.net.*;
+import java.text.*;
 import java.util.*;
 import java.util.zip.*;
 
@@ -32,7 +33,7 @@ import com.thoughtworks.xstream.*;
 
 public class YamlDataSource implements DataSource {
 
-  private final static String[][] nullParms=new String[][]{{}};
+  private final static String[][] nullParms=new String[][]{};
 
   MysqlDataSource mysqlSource;
   boolean useMysqlSource = false;
@@ -46,6 +47,8 @@ public class YamlDataSource implements DataSource {
   Vector<FreiNode> nodes;
   
   DataSourceListener listener;
+  
+  DateFormat df=new SimpleDateFormat("y-M-D H:m:s");
 
   XStream xstream=new XStream();//DEBUG
   
@@ -54,19 +57,18 @@ public class YamlDataSource implements DataSource {
     
     if (useMysqlSource) mysqlSource=new MysqlDataSource("localhost", "root", "", "freiberlin", true);
     
-/*  try {
-        Object yaml=getYAML(yamlURL+"/uptime/freimap/state/overview/", nullParms);
+    try {
+        Object yaml=getYAML(yamlURL+"/uptime/yaml/state/overview/", nullParms);
         ArrayList<HashMap> list = list(yaml);
-        firstUpdateTime=getI(list.get(0), "startdate");
-        lastUpdateTime =getI(list.get(1), "stopdate");
+        firstUpdateTime=getDate(list.get(0), "startdate");
+        lastUpdateTime =getDate(list.get(1), "stopdate");
         clockCount     =getI(list.get(2), "count");
     } catch (Exception ex) {
       ex.printStackTrace();
     }
-*/
 
     //fake overview getYAML by reading from a file
-    try {
+/*    try {
       ArrayList<HashMap> list = list(Yaml.load(new File("overview.yaml")));
       firstUpdateTime=getI(list.get(0), "startdate");
       lastUpdateTime =getI(list.get(1), "stopdate");
@@ -74,7 +76,7 @@ public class YamlDataSource implements DataSource {
     } catch (Exception ex) {
       ex.printStackTrace();
     }
-    //end 
+*/    //end 
     
     fetchAvailableTimeStamps();
   }
@@ -85,10 +87,38 @@ public class YamlDataSource implements DataSource {
   }
   
   String getS(HashMap map, String key) {
-    return (String)map.get(key);
+    Object o = map.get(key);
+    try {
+      return (String)o;
+    } catch (Exception ex) {
+      System.out.println(o);
+      ex.printStackTrace();
+      System.exit(1);
+    }
+    return null;
   }
+
+  long getDate(HashMap map, String key) {
+    try {
+      long timestamp = df.parse(getS(map, key)).getTime();
+      return timestamp;
+    } catch (Exception ex) {
+      ex.printStackTrace();
+      System.exit(1);
+    }
+    return -1;
+  }
+
   int getI(HashMap map, String key) {
-    return ((Integer)map.get(key)).intValue();
+    Object o = map.get(key);
+    try {
+      return ((Integer)o).intValue();
+    } catch (Exception ex) {
+      System.out.println(o);
+      ex.printStackTrace();
+      System.exit(1);
+    }
+    return -1;
   }
   
   Object getYAML(String surl, String[][] parms) { 
@@ -100,20 +130,27 @@ public class YamlDataSource implements DataSource {
          data += URLEncoder.encode(parms[i][0], "UTF-8") + "=" + URLEncoder.encode(parms[i][1], "UTF-8");
         if (i<parms.length-1) data += "&";
       }
+      System.out.println("data: "+data);
  
       // Send data
       URL url = new URL(surl);
       URLConnection conn = url.openConnection();
+      conn.addRequestProperty("Accept-encoding","gzip");
       conn.setDoOutput(true);
       OutputStreamWriter wr = new OutputStreamWriter(conn.getOutputStream()); //where may we close this one?
       wr.write(data);
       wr.flush();
     
-      GZIPInputStream zip=new GZIPInputStream(conn.getInputStream());
-      Object yaml= Yaml.load(zip);
+      String encoding = conn.getHeaderField("Content-Encoding");
+      InputStream in = conn.getInputStream();
+
+      if ((encoding != null) && (encoding.equals("gzip"))) {
+        in=new GZIPInputStream(in);
+      }
+      Object yaml= Yaml.load(in);
       wr.close();
-      zip.close();
-      return yaml;      
+      in.close();
+      return yaml;
     } catch (Exception ex) {
       ex.printStackTrace();
       return null;
@@ -179,7 +216,7 @@ public class YamlDataSource implements DataSource {
   public Vector<FreiLink> getLinks(long time) { //hack. expects a yamlstate id, not a timestamp. see directly above. (...FIXME)
     Vector <FreiLink> linkList=new Vector<FreiLink>();
     try {
-      //Object yaml=getYAML(yamlURL+"/uptime/freimap/state/detail/", new String[][]{{"id",""+time}});
+      //Object yaml=getYAML(yamlURL+"/uptime/yaml/state/detail/", new String[][]{{"id",""+time}});
       HashMap<String, Object> yaml=(HashMap<String, Object>)Yaml.load(new File("detail.yaml"));
       
       Iterator<String> entries=yaml.keySet().iterator();
@@ -218,9 +255,9 @@ public class YamlDataSource implements DataSource {
     //adds node to nodeByID
     //returns node object
     
-    //Object yaml=getYAML(yamlURL+"/uptime/freimap/list/", new String[][]{{"id",""+id}, {"fields", "\*"}});
+    HashMap<String, HashMap> yaml=(HashMap<String, HashMap>)getYAML(yamlURL+"/uptime/yaml/list/", new String[][]{{"id",""+id}, {"fields", "*"}});
     try {
-      HashMap<String, HashMap> yaml=(HashMap<String, HashMap>)Yaml.load(new File("node.yaml"));
+      //HashMap<String, HashMap> yaml=Yaml.load(new File("node.yaml"));
       HashMap<String, Object> nodedata = yaml.get(id.toString());
       String ip=(String)nodedata.get("ip");
       FreiNode node=nodeByName.get(ip);
@@ -256,7 +293,7 @@ public class YamlDataSource implements DataSource {
     long offsetTime;
  
     public TimeStampFetcher () {
-      int realOffset=Math.max(OFFSET, clockCount);
+      long realOffset=Math.max(OFFSET, clockCount);
       offsetTime=(lastUpdateTime-firstUpdateTime)*realOffset/clockCount;
       new Thread(this).start();
     }
@@ -265,8 +302,8 @@ public class YamlDataSource implements DataSource {
       long offset = firstUpdateTime;
       try {
         while (true) {
-          //Object yaml=getYAML(yamlURL+"/uptime/freimap/state/list/", new String[][]{{"timerange",offset+"-"+(offset+offsetTime-1)}});
-          HashMap<String, HashMap> yaml = (HashMap<String, HashMap>)Yaml.load(new File("list.yaml"));          
+          HashMap<String, HashMap> yaml=(HashMap<String, HashMap>)getYAML(yamlURL+"/uptime/yaml/state/list/", new String[][]{{"timerange",offset+"-"+(offset+offsetTime-1)}});
+          //HashMap<String, HashMap> yaml = (HashMap<String, HashMap>)Yaml.load(new File("list.yaml"));          
          
           boolean hasResults=false; 
           long stamp=0;
