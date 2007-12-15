@@ -4,6 +4,7 @@ import java.awt.Graphics2D;
 
 import net.relet.freimap.ColorScheme;
 import net.relet.freimap.Converter;
+import net.relet.freimap.VisorLayer;
 
 /**
  * A <code>Background</code> instance is responsible for painting
@@ -21,7 +22,7 @@ import net.relet.freimap.Converter;
  * @author Robert Schuster <robertschuster@fsfe.org>
  *
  */
-public abstract class Background {
+public abstract class Background implements VisorLayer {
 
 	protected int zoom, width, height;
 	
@@ -34,7 +35,7 @@ public abstract class Background {
 	 * 
 	 * @param conv
 	 */
-	public final void setConverter(Converter conv)
+	public void setConverter(Converter conv)
 	{
 		converter = conv;
 	}
@@ -117,6 +118,23 @@ public abstract class Background {
 			};
 		};
 	}
+
+        /**
+	 * Indiciates whether this VisorLayer instance is transparent. 
+	 * 
+	 * @return false by default, may be overridden.
+	 */
+        public boolean isTransparent() {
+          return false;
+        }
+
+        /**
+	 * Attempts to set transparency to this VisorLayer. Will not have any action unless overridden by an instance. 
+	 * 
+	 * @return false by default, may be overridden.
+	 */
+        public void setTransparent(boolean t) {
+        }
 
 	/**
 	 * Creates a <code>Background</code> which paints 

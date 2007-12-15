@@ -22,12 +22,11 @@
 
 package net.relet.freimap;
 
-import java.awt.Color;
-import java.awt.Container;
+import java.awt.*;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 
-import javax.swing.JFrame;
+import javax.swing.*;
 
 import net.relet.freimap.background.Background;
 
@@ -53,18 +52,22 @@ public class Visor extends JFrame implements WindowListener {
   
   VisorFrame viz;
   DataSource source;
+
+  JMenuBar  bar = new JMenuBar();
+  JMenu     m_source  = new JMenu("Source");
+  JMenuItem mi_open   = new JMenuItem("Open...");
+  JMenu     m_back    = new JMenu("Background");
+  JMenuItem mi_select = new JMenuItem("Select...");
+  JMenu     m_view    = new JMenu("View");
+  JMenu     m_help    = new JMenu("Help");
+  JMenuItem mi_about  = new JMenu("About");
   
   public Visor(DataSource source, Background background) {
-    super("freimap.berlios.de / (c)opyleft thomas hirsch");
+    super("http://freimap.berlios.de");
     this.source=source;
-    viz=new VisorFrame(source, background);
-    Container c = this.getContentPane();
-    c.add(viz);
-    c.setBackground(Color.black);
-    this.pack();
-    this.setVisible(true);
-    this.addWindowListener(this);
     
+    initLayout(source, background);
+
     try {
       while (true) {
         Thread.sleep(1);
@@ -74,6 +77,26 @@ public class Visor extends JFrame implements WindowListener {
       ex.printStackTrace();
     }
   }  
+  
+  void initLayout(DataSource source, Background background) {
+    viz=new VisorFrame(source);
+    //viz.addLayer(new DataSourceLayer(source));
+    viz.addLayer(background);
+    Container c = this.getContentPane();
+    
+    m_source.add(mi_open);
+    m_help.add(mi_about);
+    bar.add(m_source);
+    bar.add(m_back);
+    bar.add(m_view);
+    bar.add(m_help);
+    this.setJMenuBar(bar);
+    c.add(viz);
+    c.setBackground(Color.black);
+    this.pack();
+    this.setVisible(true);
+    this.addWindowListener(this);
+  }
   
   public void windowActivated(WindowEvent e) {}
   public void windowClosed(WindowEvent e) {}

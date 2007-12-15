@@ -59,8 +59,6 @@ import javax.swing.JComboBox;
 import javax.swing.JPanel;
 import javax.swing.border.LineBorder;
 
-import net.relet.freimap.background.Background;
-
 import org.ho.yaml.Yaml;
 
 /*
@@ -120,16 +118,15 @@ public class VisorFrame extends JPanel implements DataSourceListener, ComponentL
   DateFormat dfdate=DateFormat.getDateInstance(DateFormat.MEDIUM, Locale.GERMANY),
              dftime=DateFormat.getTimeInstance(DateFormat.MEDIUM, Locale.GERMANY);
   
-  Background background;
+  Vector<VisorLayer> layers = new Vector<VisorLayer>();
+
   ColorScheme cs;
 
   Converter converter = new Converter();
 
-  public VisorFrame(DataSource source, Background bg) {
+  public VisorFrame(DataSource source) {
     
-	background = bg;
-	background.setConverter(converter);
-	cs = background.getColorScheme();
+    cs = ColorScheme.NO_MAP;
 
     this.source=source;
     this.source.addDataSourceListener(this);
@@ -169,6 +166,14 @@ public class VisorFrame extends JPanel implements DataSourceListener, ComponentL
     
     //debug
     System.out.println(nodes.size() + " nodes.");
+  }
+
+  public void addLayer(VisorLayer layer) {
+    layer.setConverter(converter);
+    layers.add(layer);
+  }
+  public void removeLayer(VisorLayer layer) {
+    layers.remove(layer);
   }
   
   //datasourcelistener
@@ -223,7 +228,10 @@ public class VisorFrame extends JPanel implements DataSourceListener, ComponentL
     cx = w / 2;
     cy = h / 2;
     buf=this.createImage(w,h);
-    background.setDimension(w, h);
+
+    for (int i=0;i<layers.size();i++) {
+      layers.elementAt(i).setDimension(w, h);
+    }
   }
 
   private FreiNode uplink = new FreiNode("0.0.0.0/0.0.0.0");
@@ -231,7 +239,9 @@ public class VisorFrame extends JPanel implements DataSourceListener, ComponentL
     if (buf==null) {
       w = this.getWidth();
       h = this.getHeight();
-      background.setDimension(w, h);
+      for (int i=0;i<layers.size();i++) {
+        layers.elementAt(i).setDimension(w, h);
+      }
       buf=this.createImage(w,h);
     }
     tfsearch.setLocation(5,33); //why do we have to redo this every time?
@@ -241,7 +251,9 @@ public class VisorFrame extends JPanel implements DataSourceListener, ComponentL
     g.setColor(cs.getColor(ColorScheme.Key.MAP_BACKGROUND));
     g.fillRect(0,0,w,h);
 
-    background.paint(g);
+    for (int i=0;i<layers.size();i++) {
+      layers.elementAt(i).paint(g);
+    }
         
     //draw links
     Stroke linkStroke = new BasicStroke((float)(Math.min(5,0.00005 * scale)), BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
@@ -543,7 +555,9 @@ public class VisorFrame extends JPanel implements DataSourceListener, ComponentL
   private void initZoom(int zoom, int viewX, int viewY)
   {
 	  converter.initZoom(zoom, viewX, viewY);
-	  background.setZoom(zoom);
+	  for (int i=0;i<layers.size();i++) {
+            layers.elementAt(i).setZoom(zoom);
+          }
   }
   
   private void centerOn(Point p) {
