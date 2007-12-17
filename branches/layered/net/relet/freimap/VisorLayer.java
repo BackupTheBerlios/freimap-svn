@@ -76,4 +76,17 @@ public interface VisorLayer {
   * @param zoom
   */
  public void setZoom(int zoom);
+
+ /**
+  * Sets the <code>VisorLayer</code>s zoom.
+  * 
+  * <p>This method must be called whenever the zoom changes
+  * otherwise calculations will get incorrect and drawing problems
+  * may occur.</p>
+  * 
+  * @param zoom
+  */
+ public void mouseMoved(double lat, double lon);
+ public void mouseClicked(double lat, double lon, int button);
+
 }

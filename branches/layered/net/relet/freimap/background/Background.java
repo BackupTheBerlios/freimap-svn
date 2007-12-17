@@ -186,5 +186,9 @@ public abstract class Background implements VisorLayer {
 				+ "). Defaulting to blank.");
 		return createBlankBackground();
 	}
+ 
+ //these two are ignored.
+ public void mouseMoved(double lat, double lon) {}
+ public void mouseClicked(double lat, double lon, int button) {}
 
 }

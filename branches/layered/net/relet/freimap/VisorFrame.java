@@ -67,20 +67,12 @@ todo dimension -> configfile
      rename x and y into lon and lat
 */
 
-public class VisorFrame extends JPanel implements DataSourceListener, ComponentListener, ActionListener, MouseListener, MouseMotionListener, MouseWheelListener {
-  double scale=1.0d; // current scaling
-  
-  int zoom = 0;
-  
-  Vector<FreiNode> nodes; //vector of known nodes
-  Vector<FreiLink> links; //vector of currently displayed links
-  Hashtable<String, Float> availmap; //node availability in percent (0f-1f)
-  Hashtable<String, NodeInfo> nodeinfo=new Hashtable<String, NodeInfo>(); //stores nodeinfo upon right click
-  Hashtable<FreiLink, LinkInfo> linkinfo=new Hashtable<FreiLink, LinkInfo>(); //stores linkinfo upon right click
-
-  Image buf; //double buffer
-  int w=800,h=600; //screen width, hight
+public class VisorFrame extends JPanel implements ComponentListener, MouseListener, MouseMotionListener, MouseWheelListener {
+  double scale=1.0d;  // current scaling
+  int zoom = 0;       // zoom factor, according to OSM tiling
+  int w=800,h=600;    //screen width, hight
   int cx=400, cy=300; //center of screen
+
   int timelinex0=w/3, timelinex1=11*w/12;
   long firstUpdateTime, crtTime, oldTime=0, lastUpdateTime, 
        firstAvailableTime=-1, lastAvailableTime=-1;
@@ -90,135 +82,64 @@ public class VisorFrame extends JPanel implements DataSourceListener, ComponentL
   //crttime = ...
   //oldtime = ...
   
-  DataSource source;
-  
   ImageIcon logo1  = new ImageIcon(getClass().getResource("/gfx/logo1.png"));
   ImageIcon logo2  = new ImageIcon(getClass().getResource("/gfx/logo2.png"));
   ImageIcon play   = new ImageIcon(getClass().getResource("/gfx/play.png"));
   ImageIcon stop   = new ImageIcon(getClass().getResource("/gfx/stop.png"));
 
-  int mousex=0, mousey=0;
-  FreiNode selectedNode;
-  FreiLink selectedLink;
-  double selectedNodeDistance,
-         selectedLinkDistance;
-  int      selectedTime;
-
-  public static Color fgcolor = new Color(20,200,20),     //used for text, lines etc., accessed globally!
-                bgcolor = new Color(64,128,64,196),       //used for transparent backgrounds of most status boxes
-                fgcolor2 = new Color(150,150,255),       //used for foreground of link status boxes
-                bgcolor2 = new Color(40,40,192,196);       //used for transparent backgrounds of link status boxes
   public static Font mainfont = new Font("SansSerif", 0, 12),
                      smallerfont = new Font("SansSerif", 0, 9);
-  
-  protected JComboBox tfsearch;
 
+  public static Color fgcolor = new Color(20,200,20),     //used for text, lines etc., accessed globally! FIXME move these into colorscheme!
+                bgcolor = new Color(64,128,64,196),       //used for transparent backgrounds of most status boxes
+                fgcolor2 = new Color(150,150,255),        //used for foreground of link status boxes
+                bgcolor2 = new Color(40,40,192,196);      //used for transparent backgrounds of link status boxes
+  ColorScheme cs = ColorScheme.NO_MAP;
+
+  int mousex=0, mousey=0;
+
+  int      selectedTime;
+  
   Runtime runtime;
 
   DateFormat dfdate=DateFormat.getDateInstance(DateFormat.MEDIUM, Locale.GERMANY),
              dftime=DateFormat.getTimeInstance(DateFormat.MEDIUM, Locale.GERMANY);
   
   Vector<VisorLayer> layers = new Vector<VisorLayer>();
+  VisorLayer activeLayer;
 
-  ColorScheme cs;
+  Image buf; //double buffer
 
   Converter converter = new Converter();
 
   public VisorFrame(DataSource source) {
-    
-    cs = ColorScheme.NO_MAP;
 
-    this.source=source;
-    this.source.addDataSourceListener(this);
     this.addComponentListener(this);
     this.addMouseListener(this);
     this.addMouseMotionListener(this);
     this.addMouseWheelListener(this);
     runtime=Runtime.getRuntime();
-
-    System.out.println("reading node list.");
-    nodes=source.getNodeList();
-    dumpNodes();
-    System.out.println("reading node availability.");
-    availmap=source.getNodeAvailability(0);
-    System.out.print("reading link list.");
-    long now = System.currentTimeMillis();
-    lastAvailableTime = firstAvailableTime = crtTime = firstUpdateTime = source.getFirstUpdateTime();
-    lastUpdateTime = source.getLastUpdateTime();
-    links = source.getLinks(firstUpdateTime);
-    System.out.println("("+(System.currentTimeMillis()-now)+"ms)");
     
     initZoom(0, cx, cy);
-    scale=converter.getScale();
-
-    FreiNode[] anodes=(nodes.toArray(new FreiNode[nodes.size()]));
-    Arrays.sort(anodes);
-    tfsearch = new JComboBox(anodes);
-
-    tfsearch.setFont(smallerfont);
-    tfsearch.setOpaque(false);
-    tfsearch.setEditable(true);
-    //tfsearch.setForeground(fgcolor);
-    tfsearch.setBackground(bgcolor);
-    tfsearch.setBorder(new LineBorder(fgcolor, 1, true));
-    tfsearch.addActionListener(this);
-    this.add(tfsearch);
-    
-    //debug
-    System.out.println(nodes.size() + " nodes.");
   }
 
   public void addLayer(VisorLayer layer) {
+    addLayer(layer, false);
+  }
+  public void addLayer(VisorLayer layer, boolean active) {
     layer.setConverter(converter);
+    layer.setDimension(w,h);
+    layer.setZoom(zoom);
+    if (active) activeLayer=layer;
     layers.add(layer);
   }
   public void removeLayer(VisorLayer layer) {
     layers.remove(layer);
   }
-  
-  //datasourcelistener
-  public void timeRangeAvailable(long from, long until) {
-    firstAvailableTime=from;
-    lastAvailableTime=until;
-    if ((firstUpdateTime>from)||(firstUpdateTime<100)) firstUpdateTime=from;
-    if (lastUpdateTime<until) lastUpdateTime=until;
-    nextFrame();
-  }
-  public void nodeListUpdate(FreiNode node) {
-    if (nodes!=null) { //fixme: this really should not happen
-      nodes.add(node);
-      dumpNodes();
-    }
-  }
-  private void dumpNodes() {
-    //exportNodes();
-    //exportLinks();
-    /*try {
-      ObjectOutputStream oos=new ObjectOutputStream(new FileOutputStream("nodes.dump"));
-      oos.writeObject(nodes);
-      oos.flush();
-      oos.close();
-    } catch (Exception ex) {
-      ex.printStackTrace();
-    } */
-  }
-  
   public Dimension getPreferredSize() {
     return new Dimension(w,h);
   }
   
-  public void actionPerformed(ActionEvent e) {
-    FreiNode node;
-    String query=tfsearch.getSelectedItem().toString();
-    for (int i=0;i<nodes.size();i++) {
-      node = nodes.elementAt(i);
-      if (node.id.equals(query)) {
-    	  converter.setWorld(converter.lonToWorld(node.lon) - cx, converter.latToWorld(node.lat) - cy);
-    	  return;
-      }
-    }
-  }
-
   public void componentHidden(ComponentEvent e) {}
   public void componentMoved(ComponentEvent e) {}
   public void componentShown(ComponentEvent e) {}
@@ -227,6 +148,7 @@ public class VisorFrame extends JPanel implements DataSourceListener, ComponentL
     h = this.getHeight();
     cx = w / 2;
     cy = h / 2;
+
     buf=this.createImage(w,h);
 
     for (int i=0;i<layers.size();i++) {
@@ -234,232 +156,17 @@ public class VisorFrame extends JPanel implements DataSourceListener, ComponentL
     }
   }
 
-  private FreiNode uplink = new FreiNode("0.0.0.0/0.0.0.0");
   public void paint(Graphics gra) {
     if (buf==null) {
-      w = this.getWidth();
-      h = this.getHeight();
-      for (int i=0;i<layers.size();i++) {
-        layers.elementAt(i).setDimension(w, h);
-      }
       buf=this.createImage(w,h);
     }
-    tfsearch.setLocation(5,33); //why do we have to redo this every time?
-
     Graphics2D g=(Graphics2D)buf.getGraphics();
-    g.setFont(mainfont);
     g.setColor(cs.getColor(ColorScheme.Key.MAP_BACKGROUND));
     g.fillRect(0,0,w,h);
 
+    //draw all layers
     for (int i=0;i<layers.size();i++) {
       layers.elementAt(i).paint(g);
-    }
-        
-    //draw links
-    Stroke linkStroke = new BasicStroke((float)(Math.min(5,0.00005 * scale)), BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
-    Stroke cableStroke = new BasicStroke((float)(Math.min(15,0.00015 * scale)), BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
-    Stroke selectedStroke = new BasicStroke((float)(Math.min(30,0.00030 * scale)), BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
-    
-    //draw selected link extra thick
-    if (selectedLink != null) {
-      g.setStroke(selectedStroke);
-      g.setColor(fgcolor2);
-      if (selectedLink.to.equals(uplink)) {
-        double nsize = Math.min(45,Math.round(0.0015 * scale));
-        g.drawOval((int)(converter.lonToViewX(selectedLink.from.lon)-nsize/2), (int)(converter.latToViewY(selectedLink.from.lat)-nsize/2), (int)(nsize), (int)(nsize));
-      } else {
-        g.drawLine(converter.lonToViewX(selectedLink.from.lon),
-        		converter.latToViewY(selectedLink.from.lat),
-        		converter.lonToViewX(selectedLink.to.lon), 
-        		converter.latToViewY(selectedLink.to.lat));
-      }
-    }
-
-    //draw other links 
-    g.setStroke(linkStroke);
-    if ((links != null) && (links.size()>0)) {
-      for(int i = 0; i < links.size(); i++) {
-        FreiLink link = (FreiLink)links.elementAt(i);
-        if (link.to.equals(uplink)) {
-          g.setColor(Color.cyan);
-          g.setStroke(cableStroke);
-          double nsize = Math.min(45,Math.round(0.0015 * scale));
-          g.drawOval((int)(converter.lonToViewX(link.from.lon)-nsize/2), (int)(converter.latToViewY(link.from.lat)-nsize/2), (int)(nsize), (int)(nsize));
-          g.setStroke(linkStroke);
-        } else {
-          float green = 1;
-          if (link.HNA || (link.etx < 0)) {
-            g.setColor(Color.cyan);
-          } else if (link.etx<1) {
-            g.setColor(Color.white);
-          } else {
-            green=1/link.etx;
-            g.setColor(new Color(1-green, green, 0.5f));
-          }
-          if ((link.from.lat != link.from.DEFAULT_LAT) && (link.to.lat != link.to.DEFAULT_LAT)) //ignore links to truly unlocated nodes (at default position)
-            g.drawLine(converter.lonToViewX(link.from.lon),
-        		  converter.latToViewY(link.from.lat),
-        		  converter.lonToViewX(link.to.lon), 
-        		  converter.latToViewY(link.to.lat));
-          if (link.to.unlocated && (link.from.lat != link.from.DEFAULT_LAT)) {
-            double netx = (link.etx<1)?0d:1d/link.etx;
-            link.to.lonsum+=link.from.lon*netx;
-            link.to.latsum+=link.from.lat*netx;
-            link.to.nc+= netx;
-          }
-          if (link.from.unlocated && (link.to.lat != link.to.DEFAULT_LAT)) {
-            double netx = (link.etx<1)?0d:1d/link.etx;
-            link.from.lonsum+=link.to.lon * netx;
-            link.from.latsum+=link.to.lat * netx;
-            link.from.nc+= netx;
-          }
-        }
-      }
-    }
-    
-    //draw nodes
-    g.setColor(cs.getColor(ColorScheme.Key.NODE_UPLINK));
-    for (int i=0; i<nodes.size(); i++) {
-      FreiNode node=(FreiNode)nodes.elementAt(i);
-      if (node.equals(uplink)) continue;
-      if (node.unlocated) {
-        g.setColor(cs.getColor(ColorScheme.Key.NODE_UNLOCATED));
-      } else if (availmap!=null) {
-        Object oavail = availmap.get(node.id);
-        if (oavail==null) {
-          g.setColor(cs.getColor(ColorScheme.Key.NODE_UNAVAILABLE));
-        } else {
-          float avail = (float)Math.sqrt(((Float)oavail).floatValue()); 
-          g.setColor(new Color(1.0f-avail, avail, 0.5f));
-        }
-      }
-      double nsize = Math.max(1,Math.min(15,Math.round(0.0003 * scale)));
-      double nx = converter.lonToViewX(node.lon) - nsize/2,
-             ny = converter.latToViewY(node.lat) - nsize/2;
-             
-      g.fillOval((int)nx, (int)ny, (int)nsize, (int)nsize);
-      if (node.unlocated) {
-        if (node.nc > 1) {
-          node.lon=node.lonsum / node.nc;
-          node.lat=node.latsum / node.nc;
-        } else if (node.nc == 1) {
-          node.lon=node.lonsum + 0.0003;
-          node.lat=node.latsum + 0.0003;
-        } /*else {
-          System.err.println("Node unlocated with no neighbours: "+node.id);
-        }*/
-        node.lonsum=0; node.latsum=0; node.nc=0;
-      }
-    }
-
-    //draw highlight
-    if ((selectedNode != null)||(selectedLink != null)) {
-    	g.setPaint(fgcolor);
-    	g.setStroke(new BasicStroke((float)1f));
-
-        double nx=0, ny=0;
-        boolean showNodeInfo = true;
-
-        //draw selected node
-        if (selectedNode != null) {
-    	  double nsize = Math.min(30,Math.round(0.0006 * scale));
-    	  nx = converter.lonToViewX(selectedNode.lon);
-          ny = converter.latToViewY(selectedNode.lat);
-    	  g.draw(new Ellipse2D.Double(nx - nsize/2, ny - nsize/2, nsize, nsize));
-        } 
-        
-        if ((selectedLink!=null) && (selectedLinkDistance < selectedNodeDistance)) {
-          if (selectedLink.to.equals(uplink)) {
-            nx = converter.lonToViewX(selectedLink.from.lon);
-            ny = converter.latToViewY(selectedLink.from.lat);
-          } else {
-            nx = converter.lonToViewX((selectedLink.from.lon + selectedLink.to.lon)/2);
-            ny = converter.latToViewY((selectedLink.from.lat + selectedLink.to.lat)/2);
-            int oof = 8; //an obscure offscreen compensation factor
-            int ooc = 0;
-            while ((ooc<10)&&((nx<0)||(ny<0)||(nx>w)||(ny>h))) { //do not draw boxes offscreen too easily
-              nx = converter.lonToViewX((selectedLink.from.lon * (oof-1) + selectedLink.to.lon)/oof);
-              ny = converter.latToViewY((selectedLink.from.lat * (oof-1) + selectedLink.to.lat)/oof);
-              oof *= 8;
-              ooc++;
-            }
-          }
-          showNodeInfo = false; //show linkInfo instead
-          g.setPaint(fgcolor2);
-    	}
-
-        double boxw;
-
-        String label;
-        Vector<String> infos= new Vector<String>();
-        if (showNodeInfo) {
-          label = "Node: "+selectedNode.fqid;
-        	boxw = Math.max(180, g.getFontMetrics(mainfont).stringWidth(label)+20);
-
-          Float favail = availmap.get(selectedNode.id);
-	  String savail=(favail==null)?"N/A":Math.round(favail.floatValue()*100)+"%";
-	  infos.add ("Availability: "+savail);
-
-	  NodeInfo info = nodeinfo.get(selectedNode.id);
-          if (info!=null) {
-	    if (info.status == info.STATUS_AVAILABLE) {
-	      infos.add("min. links: " + info.minLinks );
-	      infos.add("max. links: " + info.maxLinks );
-
-	      if (info.linkCountChart != null) {
-		  info.linkCountChart.draw(g, new Rectangle2D.Float(20, 80, 250, 150));
-	      }
-            } else if (info.status == info.STATUS_FETCHING) {
-              infos.add("retrieving information");
-	    }
-	  } else {
-	    infos.add("+ right click for more +");
-	  }
-        } else {
-          boxw = g.getFontMetrics(mainfont).stringWidth("Link: 999.999.999.999 -> 999.999.999.999/999.999.999.999");
-
-          label = "Link: "+selectedLink.toString();
-          LinkInfo info = linkinfo.get(selectedLink);
-          if (info != null) {
-            if (info.status==info.STATUS_AVAILABLE) { 
-	      if (info.linkChart != null) {
-		  info.linkChart.draw(g, new Rectangle2D.Float(20, 80, 250, 150));
-	      }
-            } else if (info.status == info.STATUS_FETCHING) {
-              infos.add("retrieving information");
-            }
-	  } else {
-	    infos.add("+ right click for more +");
-	  }
-        }
-
-        // Put box at fixed location.
-        double boxx = w - 10 - boxw / 2;
-        double boxy = 100;
-
-               double labelh = g.getFontMetrics(mainfont).getHeight(),
-	       infoh = g.getFontMetrics(smallerfont).getHeight(),
-               boxh = labelh + infoh * infos.size() + 10;
-
-
-	    // Connect with the bottom line of the box.
-		g.draw(new Line2D.Double(nx, ny, boxx, boxy+boxh/2));
-
-        Shape box = new RoundRectangle2D.Double(boxx-boxw/2, boxy-boxh/2, boxw, boxh, 10, 10);
-        Color mybgcolor = showNodeInfo?bgcolor:bgcolor2;
-	Color myfgcolor = showNodeInfo?fgcolor:fgcolor2;
-	g.setPaint(mybgcolor);
-    	g.fill(box); 
-        g.setPaint(myfgcolor);
-    	g.draw(box);
-	g.setColor(showNodeInfo?Color.green:Color.cyan); 
-        g.setFont(mainfont);
-	g.drawString(label, (int)(boxx - boxw/2 + 10), (int)(boxy - boxh/2 + labelh));
-	g.setColor(myfgcolor); 
-	g.setFont(smallerfont);
-	for (int i=0; i<infos.size(); i++) {
-		g.drawString(infos.elementAt(i), (int)(boxx - boxw/2 + 10), (int)(boxy - boxh/2 + labelh + infoh*i + 15));
-	}
     }
 
     //draw logos
@@ -525,7 +232,7 @@ public class VisorFrame extends JPanel implements DataSourceListener, ComponentL
     g.draw(menus);
     g.draw(footer);
     g.setFont(mainfont);
-    g.drawString("{ cim city || freifunc ^ cience };", 10, 20);
+    g.drawString("{ http://freimap.berlios.de };", 10, 20); //TODO: replace this string by location information gathered from osm namefinder api :) 
     g.drawString("coom " + zoom + "/17", w/4, 20);
     g.drawString("lon " + converter.viewXToLon(mousex), w/2, 20);
     g.drawString("lat " + converter.viewYToLat(mousey), 3*w/4, 20);
@@ -535,19 +242,12 @@ public class VisorFrame extends JPanel implements DataSourceListener, ComponentL
          //total =runtime.totalMemory(),
          max   =runtime.maxMemory();
     g.drawString("resource usage: "+free*100/max+"%", 3*w/4, h-10);
-    //paintChildren(g);
 
     gra.drawImage(buf, 0, 0, this);
     paintChildren(gra);
   }
 
-  public Object getElementAt(Point p) {
-	//todo
-	return null;
-  }
-  
   double refx, refy, refscale;
-  
   public void saveScale() {
     refscale=scale;
   }
@@ -566,68 +266,12 @@ public class VisorFrame extends JPanel implements DataSourceListener, ComponentL
     		converter.viewToWorldY(p.y) - cy);
   }
 
-  public FreiNode getSelectedNode() {
-    return selectedNode;
-  }
-
   public double sqr(double x) { 
     return x*x;
   }
   public double dist (double x1, double x2, double y1, double y2) {
     return Math.sqrt(sqr(x1-x2)+sqr(y1-y2));
   }
-
-  public FreiLink getClosestLink(double lon, double lat) {
-    if (links==null) return null;
-    double dmin=Double.POSITIVE_INFINITY;
-    FreiLink closest=null, link;
-    boolean within;
-    for (int i=0; i<links.size(); i++) {
-      link=links.elementAt(i);
-      within=true;
-      if (link.from.lon < link.to.lon) { 
-        if ((lon < link.from.lon) || (lon > link.to.lon)) within = false;
-      } else {
-        if ((lon > link.from.lon) || (lon < link.to.lon)) within = false;
-      }
-      if (link.from.lat < link.to.lat) { 
-        if ((lat < link.from.lat) || (lat > link.to.lat)) within = false;
-      } else {
-        if ((lat > link.from.lat) || (lat < link.to.lat)) within = false;
-      }
-      if (within) {
-        if (dist(lat, link.from.lat, lon, link.from.lon) > dist(lat, link.to.lat, lon, link.to.lon)) continue; 
-           //we will then select the other link direction.
-        double x1 = link.from.lat, 
-               x2 = link.to.lat,
-               y1 = link.from.lon,
-               y2 = link.to.lon;
-        double d = Math.abs((x2-x1)*(y1-lon) - (x1-lat)*(y2-y1)) / Math.sqrt(sqr(x2-x1)+sqr(y2-y1));
-        if (d<dmin) {
-	  dmin=d;
-	  closest=link;
-        }
-      }
-    }
-    selectedLinkDistance=dmin;
-    return closest;
-  }
-
-  public FreiNode getClosestNode(double lon, double lat) {
-    double dmin=Double.POSITIVE_INFINITY;
-    FreiNode closest=null, node;
-    for (int i=0; i<nodes.size(); i++) {
-      node=nodes.elementAt(i);
-      double d = Math.abs(node.lon - lon) + Math.abs(node.lat - lat); //no need to sqrt here
-      if (d<dmin) {
-	dmin=d;
-	closest=node;
-      }
-    }
-    selectedNodeDistance = (closest==null)?dmin:dist(closest.lon, lon, closest.lat, lat); //recalculate exact distance
-    return closest;
-  }
-
   
   public void mouseMoved(MouseEvent e) {
     mousex = e.getX();
@@ -635,15 +279,13 @@ public class VisorFrame extends JPanel implements DataSourceListener, ComponentL
     
     double lon = converter.viewXToLon(mousex);
     double lat = converter.viewYToLat(mousey);
+
     if ((mousey>h-100)&&(mousex >= timelinex0)&&(mousex <= timelinex1)) {
-        selectedNode = null;
-        selectedLink = null;
-        selectedTime = mousex;
+      activeLayer.mouseMoved(0,0); //unset any mouse motion      
+      selectedTime = mousex;
     } else {
-    	selectedNode = getClosestNode(lon, lat);
-    	selectedLink = getClosestLink(lon, lat);
-        if (selectedNodeDistance * scale < 10) selectedLinkDistance=Double.POSITIVE_INFINITY; //when close to a node, select a node
-        selectedTime = 0;
+      activeLayer.mouseMoved(lat, lon);
+      selectedTime = 0;
     }
     repaint();
   }
@@ -668,25 +310,17 @@ public class VisorFrame extends JPanel implements DataSourceListener, ComponentL
             break;
           }
           case 2: {
-            System.out.println("Center on: "+lat+" "+lon);
-            centerOn(e.getPoint());
+              zoom=zoom+1; //DEBUG only
+              initZoom(zoom, mousex, mousey);
+//            System.out.println("Center on: "+lat+" "+lon);
+//            centerOn(e.getPoint());
             break;
           }
         }
         break;
       }
       case MouseEvent.BUTTON3: {
-        if (selectedNodeDistance < selectedLinkDistance) {
-          if (selectedNode != null) {
-            NodeInfo info=new NodeInfo();
-            source.getLinkCountProfile(selectedNode, info);
-            nodeinfo.put(selectedNode.id, info);
-          }
-        } else if (selectedLink != null) {
-          LinkInfo info=new LinkInfo();
-          source.getLinkProfile(selectedLink, info);
-          linkinfo.put(selectedLink, info);
-        }
+        activeLayer.mouseClicked(lat, lon, MouseEvent.BUTTON3);
       }
     }
   }
@@ -722,7 +356,7 @@ public class VisorFrame extends JPanel implements DataSourceListener, ComponentL
       }
     }
   }
-  //the rest  
+   
   public void mouseWheelMoved(MouseWheelEvent e) {
     saveScale();
     
@@ -745,58 +379,17 @@ public class VisorFrame extends JPanel implements DataSourceListener, ComponentL
 
   public void nextFrame() {
     if (playing) crtTime += 1;
-    //crtTime = lastAvailableTime;
-    long closestTime = source.getClosestUpdateTime(crtTime);
-    if (closestTime != oldTime) {
-      links = source.getLinks(closestTime);
-      this.repaint();
-    } 
-    oldTime = closestTime;
+    crtTime = lastAvailableTime; //huh?
+    for (int i=0; i<layers.size(); i++) {
+      //layers.elementAt(i).setCurrentTime(crtTime);
+    }
+//FIXME move this to nodelayer & co
+//    long closestTime = source.getClosestUpdateTime(crtTime);
+//    if (closestTime != oldTime) {
+//      links = source.getLinks(closestTime);
+//      this.repaint();
+//    } 
+//    oldTime = closestTime;
   }
 
-  //XStream xstream = new XStream();
-  public void exportNodes() {
-    if (nodes==null) return;
-    try {
-      Yaml.dumpStream(nodes.iterator(), new File("nodes.yaml"), true);
-    } catch (Exception ex) {
-      ex.printStackTrace();
-    }
-/*
-    xstream.alias("node", FreiNode.class);
-    xstream.omitField(FreiNode.class, "lonsum");
-    xstream.omitField(FreiNode.class, "latsum");
-    xstream.omitField(FreiNode.class, "nc");
-    try {
-      String xmlNodes = xstream.toXML(nodes);
-      PrintWriter out=new PrintWriter(new FileWriter("nodes.xml"));
-      out.println(xmlNodes);
-      out.close();
-    } catch (ConcurrentModificationException cmex) {
-      System.out.println("An exception happened which may be safely ignored.");
-    } catch (Exception ex) {
-      System.out.println(ex);
-    }
-*/
-  }
-  public void exportLinks() {
-    if (links==null) return;
-    try {
-      Yaml.dumpStream(links.iterator(), new File("links.yaml"), true);
-    } catch (Exception ex) {
-      ex.printStackTrace();
-    }
-/*    xstream.alias("link", FreiLink.class);
-    try {
-      String xmlLinks = xstream.toXML(links);
-      PrintWriter out=new PrintWriter(new FileWriter("links.xml"));
-      out.println(xmlLinks);
-      out.close();
-    } catch (ConcurrentModificationException cmex) {
-      System.out.println("An exception happened which may be safely ignored.");
-    } catch (Exception ex) {
-      System.out.println(ex);
-    }*/
-  }
-  
 }

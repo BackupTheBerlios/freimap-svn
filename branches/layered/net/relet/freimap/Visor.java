@@ -80,8 +80,8 @@ public class Visor extends JFrame implements WindowListener {
   
   void initLayout(DataSource source, Background background) {
     viz=new VisorFrame(source);
-    //viz.addLayer(new DataSourceLayer(source));
     viz.addLayer(background);
+    viz.addLayer(new NodeLayer(source), true);
     Container c = this.getContentPane();
     
     m_source.add(mi_open);
