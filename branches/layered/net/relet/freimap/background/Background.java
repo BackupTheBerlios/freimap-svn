@@ -5,6 +5,7 @@ import java.awt.Graphics2D;
 import net.relet.freimap.ColorScheme;
 import net.relet.freimap.Converter;
 import net.relet.freimap.VisorLayer;
+import net.relet.freimap.DataSource;
 
 /**
  * A <code>Background</code> instance is responsible for painting
@@ -55,6 +56,15 @@ public abstract class Background implements VisorLayer {
 		width = w;
 		height = h;
 	}
+
+  /**
+   * returns null
+   * 
+   * @return null
+   */
+  public DataSource getSource() { return null; }
+
+  public void setCurrentTime(long crtTime) {}
 
 	/**
 	 * Sets the <code>Background</code>s zoom.

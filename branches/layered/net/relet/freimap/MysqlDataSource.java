@@ -38,7 +38,9 @@ public class MysqlDataSource implements DataSource {
   private Hashtable<String, Float> availmap = null;
   private Connection conn, conn2, conn3;
   private long firstUpdateTime = 1,
-               lastUpdateTime = 1;
+               lastUpdateTime = 1,
+               firstAvailableTime = 1,
+               lastAvailableTime = 1;
   private DataSourceListener listener=null;
   
   public MysqlDataSource() {
@@ -124,6 +126,18 @@ public class MysqlDataSource implements DataSource {
     return lastUpdateTime;
   }
 
+  public long getLastAvailableTime() {
+    return lastAvailableTime;
+  }
+  public long getFirstAvailableTime() {
+    return firstAvailableTime;
+  }
+  public void setAvailableTime(long first, long last) {
+    if ((lastAvailableTime == 1) || (last > lastAvailableTime)) lastAvailableTime = last;
+    if ((firstAvailableTime == 1) || (first < firstAvailableTime)) firstAvailableTime = first;
+    if (listener!=null) listener.timeRangeAvailable(first, last);
+  }
+
   public void addDataSourceListener(DataSourceListener dsl) {
     this.listener = dsl; //todo: allow multiple listeners
   }
@@ -170,6 +184,8 @@ public class MysqlDataSource implements DataSource {
         ex.printStackTrace();
       }
     }
+    if (firstAvailableTime == 1) firstAvailableTime=firstUpdateTime;
+    if (lastAvailableTime == 1) lastAvailableTime=firstUpdateTime;
     return firstUpdateTime;
   }
   
@@ -294,7 +310,7 @@ public class MysqlDataSource implements DataSource {
             Thread.yield();
           }
           if (!hasResults) break;
-          if (listener!=null) listener.timeRangeAvailable(firstUpdateTime, stamp);
+          setAvailableTime(firstUpdateTime, stamp);
           //System.out.println("fetched "+firstUpdateTime+" - "+stamp);
           offset+=OFFSET;
           Thread.sleep(SLEEP);

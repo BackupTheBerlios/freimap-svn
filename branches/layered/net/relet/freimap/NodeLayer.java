@@ -82,8 +82,7 @@ public class NodeLayer implements VisorLayer, DataSourceListener {
 
   private boolean transparent = true;
 
-  long firstUpdateTime, crtTime, oldTime=0, lastUpdateTime, 
-       firstAvailableTime=-1, lastAvailableTime=-1;
+  long crtTime;
 
 
   public NodeLayer(DataSource source) {
@@ -96,21 +95,14 @@ public class NodeLayer implements VisorLayer, DataSourceListener {
     availmap=source.getNodeAvailability(0);
     System.out.print("reading link list.");
     long now = System.currentTimeMillis();
-    lastAvailableTime = firstAvailableTime = crtTime = firstUpdateTime = source.getFirstUpdateTime();
-    lastUpdateTime = source.getLastUpdateTime();
-    links = source.getLinks(firstUpdateTime);
+    links = new Vector<FreiLink>();//source.getLinks(firstUpdateTime);
     System.out.println("("+(System.currentTimeMillis()-now)+"ms)");
     
   }
 
   /* datasourcelistener */
   public void timeRangeAvailable(long from, long until) {
-    firstAvailableTime=from;
-    lastAvailableTime=until;
-    if ((firstUpdateTime>from)||(firstUpdateTime<100)) firstUpdateTime=from;
-    if (lastUpdateTime<until) lastUpdateTime=until;
-    //nextFrame(); 
-    //FIXME: notify parent of new availabilities
+    //obsolete.
   }
   public void nodeListUpdate(FreiNode node) {
     if (nodes!=null) { //this really should not happen
@@ -118,6 +110,15 @@ public class NodeLayer implements VisorLayer, DataSourceListener {
     }
   }
 
+  /**
+   * returns the DataSource of this layer. If the layer is just decorative, returns null.
+   * 
+   * @return null or DataSource
+   */
+
+  public DataSource getSource() {
+    return source;
+  }
 
   /**
    * Paints the layer.
@@ -459,6 +460,17 @@ public class NodeLayer implements VisorLayer, DataSourceListener {
    this.zoom=zoom;
    this.scale=converter.getScale();
  }
+
+ /**
+  * Sets the current point in time to be displayed
+  * 
+  * @param crtTime, an unix time stamp
+  */
+ public void setCurrentTime(long crtTime) {
+   this.crtTime=source.getClosestUpdateTime(crtTime);
+   links = source.getLinks(this.crtTime);
+ }
+
  public void mouseMoved(double lat, double lon) {
    if ((lon==0) && (lat==0)) {
      selectedNode = null;

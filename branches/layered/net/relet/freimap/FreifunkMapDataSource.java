@@ -125,10 +125,20 @@ public class FreifunkMapDataSource implements DataSource {
 		return 1;
 	}
 
-	public long getFirstUpdateTime() {
-		// TODO: Implement me.
-		return 1;
-	}
+  public long getFirstUpdateTime() {
+    // TODO: Implement me.
+    return 1;
+  }
+
+  public long getFirstAvailableTime() {
+    // TODO: Implement me.
+    return 1;
+  }
+
+  public long getLastAvailableTime() {
+    // TODO: Implement me.
+    return 1;
+  }
 
 	public long getLastUpdateTime() {
 		// TODO: Implement me.

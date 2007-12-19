@@ -199,6 +199,14 @@ public class YamlDataSource implements DataSource {
   public long getFirstUpdateTime() {
     return firstUpdateTime;
   }
+  public long getFirstAvailableTime() {
+    //TODO
+    return 1;
+  }
+  public long getLastAvailableTime() {
+    //TODO 
+    return 1;
+  }
   public long getClosestUpdateTime(long time) {
     long cur=-1, id=-1, closest = Long.MAX_VALUE;
     Iterator<YamlState> ki = updateTimes.iterator();

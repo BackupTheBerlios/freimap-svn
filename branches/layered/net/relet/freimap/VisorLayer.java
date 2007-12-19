@@ -47,6 +47,14 @@ public interface VisorLayer {
 
   public void setTransparent(boolean t);
 
+  /**
+   * returns the DataSource of this layer. If the layer is just decorative, returns null.
+   * 
+   * @return null or DataSource
+   */
+
+  public DataSource getSource();
+
  /**
    * Sets the scaling converter for this background.
    */
@@ -78,14 +86,12 @@ public interface VisorLayer {
  public void setZoom(int zoom);
 
  /**
-  * Sets the <code>VisorLayer</code>s zoom.
+  * Sets the current point in time to be displayed
   * 
-  * <p>This method must be called whenever the zoom changes
-  * otherwise calculations will get incorrect and drawing problems
-  * may occur.</p>
-  * 
-  * @param zoom
+  * @param crtTime, an unix time stamp
   */
+ public void setCurrentTime(long crtTime);
+
  public void mouseMoved(double lat, double lon);
  public void mouseClicked(double lat, double lon, int button);
 

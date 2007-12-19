@@ -65,10 +65,10 @@ public interface DataSource {
     @param	time	A timestamp to be approximated 
     @return	the next best timestamp.
 */
-///** @return The first unix timestamp which has been pre-fetched. */
-//  public long getLastAvailableTime() {}
-///** @return The last unix timestamp which has been pre-fetched. */
-//  public long getFirstAvailableTime() {}
+/** @return The first unix timestamp which has been pre-fetched. */
+  public long getLastAvailableTime();
+/** @return The last unix timestamp which has been pre-fetched. */
+  public long getFirstAvailableTime();
   
   public long getClosestUpdateTime(long time);
 /** Returns link data for a given timestamp. May return null if the timestamp has not been 

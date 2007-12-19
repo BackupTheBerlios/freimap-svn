@@ -74,13 +74,10 @@ public class VisorFrame extends JPanel implements ComponentListener, MouseListen
   int cx=400, cy=300; //center of screen
 
   int timelinex0=w/3, timelinex1=11*w/12;
-  long firstUpdateTime, crtTime, oldTime=0, lastUpdateTime, 
-       firstAvailableTime=-1, lastAvailableTime=-1;
+  long crtTime;
   boolean playing=false;
-  //first, lastupdatetime = min and max of time interval as reported by datasource - data may however only be retrieved in the range below
-  //first, lastavailabletime = available range of time interval
-  //crttime = ...
-  //oldtime = ...
+  //crtTime = the second which ought to be displayed, according to user gestures or the flow of time
+  //adjustedTime = the above, adjusted to a nearby time which can actually be displayed
   
   ImageIcon logo1  = new ImageIcon(getClass().getResource("/gfx/logo1.png"));
   ImageIcon logo2  = new ImageIcon(getClass().getResource("/gfx/logo2.png"));
@@ -98,7 +95,7 @@ public class VisorFrame extends JPanel implements ComponentListener, MouseListen
 
   int mousex=0, mousey=0;
 
-  int      selectedTime;
+  int      selectedTime; //a pixel value, describing the position of the mouse where it currently touches the timebar
   
   Runtime runtime;
 
@@ -170,8 +167,8 @@ public class VisorFrame extends JPanel implements ComponentListener, MouseListen
     }
 
     //draw logos
-    g.drawImage(logo1.getImage(), new AffineTransform(1d,0d,0d,1d,20d,-120d+h), this);
-    g.drawImage(logo2.getImage(), new AffineTransform(1d,0d,0d,1d,100d,-120d+h), this);
+    g.drawImage(logo1.getImage(), new AffineTransform(1d,0d,0d,1d,20d,-40d+h-logo1.getIconHeight()), this);
+    g.drawImage(logo2.getImage(), new AffineTransform(1d,0d,0d,1d,20d+logo1.getIconWidth(),-40d+h-logo2.getIconHeight()), this);
 
     //draw time line
 
@@ -179,37 +176,56 @@ public class VisorFrame extends JPanel implements ComponentListener, MouseListen
     g.setStroke(new BasicStroke((float)3f));
     int x0=timelinex0, x1=timelinex1; 
     g.draw(new Line2D.Double(x0, h-60, x1, h-60));
-    if ((firstAvailableTime > 0 ) && (firstUpdateTime != lastUpdateTime)) {
-      int tmin = (int)Math.round((double)(firstAvailableTime - firstUpdateTime) / (lastUpdateTime - firstUpdateTime) * (x1-x0) + x0),
-          tmax = (int)Math.round((double)(lastAvailableTime - firstUpdateTime) / (lastUpdateTime - firstUpdateTime) * (x1-x0) + x0);
-      g.setPaint(fgcolor);
-      g.draw(new Line2D.Double(tmin, h-60, tmax, h-60));
- 
-      if ((selectedTime>0) && (selectedTime < tmax)) {
-        g.setPaint(Color.green);
-        g.setStroke(new BasicStroke((float)2f));
-        g.draw(new Line2D.Double(selectedTime, h-70, selectedTime, h-50));
-      }
-   }
-    
-    g.setPaint(fgcolor);
-    g.setStroke(new BasicStroke((float)1f));
-    g.draw(new Line2D.Double(x0, h-65, x0, h-55));
-    g.draw(new Line2D.Double(x1, h-65, x1, h-55));
-    g.setFont(smallerfont);
-    g.drawString(dfdate.format(firstUpdateTime*1000), x0, h-45);
-    g.drawString(dftime.format(firstUpdateTime*1000), x0, h-35);
-    g.drawString(dfdate.format(lastUpdateTime*1000), x1, h-45);
-    g.drawString(dftime.format(lastUpdateTime*1000), x1, h-35);
 
-    g.setPaint(Color.green);
-    if (lastUpdateTime>firstUpdateTime) {
-      int xc = (int)Math.round((double)(oldTime - firstUpdateTime) / (lastUpdateTime - firstUpdateTime) * (x1-x0) + x0);
-      g.draw(new Line2D.Double(xc, h-65, xc, h-55));
-      g.drawString(dfdate.format(oldTime*1000), xc, h-75);
-      g.drawString(dftime.format(oldTime*1000), xc, h-65);
+    long fUT = Long.MAX_VALUE, lUT = 0;
+    for (int i=0;i<layers.size();i++) {
+      DataSource source=layers.elementAt(i).getSource();
+      if (source==null) continue;
+      long sfUT = source.getFirstUpdateTime(),    //the time interval which can theoretically be fetched by the source
+           slUT = source.getLastUpdateTime();
+      if (sfUT<fUT) fUT=sfUT;
+      if (slUT>lUT) lUT=slUT;
     }
 
+    for (int i=0;i<layers.size();i++) {
+      VisorLayer layer=layers.elementAt(i);
+      DataSource source=layer.getSource();
+      if (source==null) continue;
+
+      long fAT = source.getFirstAvailableTime(), //the time interval which can actually displayed
+           lAT = source.getLastAvailableTime();
+
+      if ((fAT > 0 ) && (fUT != lUT)) {
+        int tmin = (int)Math.round((double)(fAT - fUT) / (lUT - fUT) * (x1-x0) + x0),
+            tmax = (int)Math.round((double)(lAT - fUT) / (lUT - fUT) * (x1-x0) + x0);
+        g.setPaint(fgcolor);
+        g.draw(new Line2D.Double(tmin, h-60, tmax, h-60));
+
+        if ((selectedTime>0) && (selectedTime < tmax)) {
+          g.setPaint(Color.green);
+          g.setStroke(new BasicStroke((float)2f));
+          g.draw(new Line2D.Double(selectedTime, h-70, selectedTime, h-50));
+        }
+      }
+
+      g.setPaint(fgcolor);
+      g.setStroke(new BasicStroke((float)1f));
+      g.draw(new Line2D.Double(x0, h-65, x0, h-55));
+      g.draw(new Line2D.Double(x1, h-65, x1, h-55));
+      g.setFont(smallerfont);
+      g.drawString(dfdate.format(fUT*1000), x0, h-45);
+      g.drawString(dftime.format(fUT*1000), x0, h-35);
+      g.drawString(dfdate.format(lUT*1000), x1, h-45);
+      g.drawString(dftime.format(lUT*1000), x1, h-35);
+
+      g.setPaint(Color.green);
+      if (lUT>fUT) {
+        int xc = (int)Math.round((double)(crtTime - fUT) / (lUT - fUT) * (x1-x0) + x0);
+        g.draw(new Line2D.Double(xc, h-65, xc, h-55));
+        g.drawString(dfdate.format(crtTime*1000), xc, h-75);
+        g.drawString(dftime.format(crtTime*1000), xc, h-65);
+      }
+    }
  
     //draw play/stop button
     if (playing) {
@@ -236,7 +252,7 @@ public class VisorFrame extends JPanel implements ComponentListener, MouseListen
     g.drawString("coom " + zoom + "/17", w/4, 20);
     g.drawString("lon " + converter.viewXToLon(mousex), w/2, 20);
     g.drawString("lat " + converter.viewYToLat(mousey), 3*w/4, 20);
-    g.drawString(new Date(oldTime*1000).toString(), 10, h-10);
+    g.drawString(new Date(crtTime*1000).toString(), 10, h-10);
     
     long free  =runtime.freeMemory(),
          //total =runtime.totalMemory(),
@@ -326,7 +342,17 @@ public class VisorFrame extends JPanel implements ComponentListener, MouseListen
   }
 
   void setCurrentTime(int x) {
-    long time = (long)(firstUpdateTime + (lastUpdateTime - firstUpdateTime) * ((double)x) / (timelinex1-timelinex0));
+    long fUT = Long.MAX_VALUE, lUT = 0; //move this to an extra function
+    for (int i=0;i<layers.size();i++) {
+      DataSource source=layers.elementAt(i).getSource();
+      if (source==null) continue;
+      long sfUT = source.getFirstUpdateTime(),    //the time interval which can theoretically be fetched by the source
+           slUT = source.getLastUpdateTime();
+      if (sfUT<fUT) fUT=sfUT;
+      if (slUT>lUT) lUT=slUT;
+    }
+
+    long time = (long)(fUT + (lUT - fUT) * ((double)x) / (timelinex1-timelinex0));
     crtTime=time;
   }
 
@@ -379,17 +405,9 @@ public class VisorFrame extends JPanel implements ComponentListener, MouseListen
 
   public void nextFrame() {
     if (playing) crtTime += 1;
-    crtTime = lastAvailableTime; //huh?
     for (int i=0; i<layers.size(); i++) {
-      //layers.elementAt(i).setCurrentTime(crtTime);
+      DataSource source = layers.elementAt(i).getSource();
+      if (source!=null) layers.elementAt(i).setCurrentTime(crtTime);
     }
-//FIXME move this to nodelayer & co
-//    long closestTime = source.getClosestUpdateTime(crtTime);
-//    if (closestTime != oldTime) {
-//      links = source.getLinks(closestTime);
-//      this.repaint();
-//    } 
-//    oldTime = closestTime;
   }
-
 }

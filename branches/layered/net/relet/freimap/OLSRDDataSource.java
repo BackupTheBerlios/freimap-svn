@@ -136,6 +136,14 @@ public class OLSRDDataSource implements DataSource {
   public long getFirstUpdateTime() {
     return firstUpdateTime;
   }
+  public long getLastAvailableTime() {
+    return lastUpdateTime;
+  }
+  public long getFirstAvailableTime() {
+    return firstUpdateTime;
+  }
+
+
   public long getClosestUpdateTime(long time) {
     long cur=-1, closest = Long.MAX_VALUE;
     Set<Long> keys = data.keySet();
