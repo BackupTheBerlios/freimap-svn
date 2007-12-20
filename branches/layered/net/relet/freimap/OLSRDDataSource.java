@@ -41,32 +41,21 @@ public class OLSRDDataSource implements DataSource {
   FreifunkMapDataSource ffmdSource;
 
   DataSource nodeSource;
+  String sNodeSource;
        
   public OLSRDDataSource() {
   }
   public void init(HashMap<String, Object> conf) {
     String host = Configurator.getS("host", conf);
-    String sport= Configurator.getS("port", conf);
+    int port = Configurator.getI("port", conf);
 
     nodefile = Configurator.getS("nodefile", conf);
     //System.out.println("nodefile = "+nodefile);
 
-    String snodesource = Configurator.getS("nodesource", conf);
+    sNodeSource = Configurator.getS("nodesource", conf);
 
-    if (snodesource != null) {
-      nodeSource=Visor.sources.get(snodesource);
-    }
-
-    if (sport==null) { 
-      System.err.println("invalid port parameter "+sport);
-      System.exit(1);
-    }
-    int port=2004;
-    try {
-      port=Integer.parseInt(sport);
-    } catch (Exception ex) {
-      ex.printStackTrace();
-      System.err.println("invalid port parameter "+sport);
+    if (port==-1) { 
+      System.err.println("invalid port parameter "+port);
       System.exit(1);
     }
     dot = new DotPluginListener(host, port, this);
@@ -74,6 +63,11 @@ public class OLSRDDataSource implements DataSource {
   
   @SuppressWarnings("unchecked")
   public Vector<FreiNode> getNodeList() {
+    if ((nodeSource == null) && (sNodeSource != null)) {
+      nodeSource=Visor.sources.get(sNodeSource);
+      sNodeSource = null;
+    }
+
     if (nodeSource!=null) {
       Vector<FreiNode> nodes = nodeSource.getNodeList();
       for (Enumeration<String> enu = generatedNodes.keys(); enu.hasMoreElements();) {

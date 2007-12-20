@@ -91,6 +91,9 @@ public class Configurator {
   public static int getI(String[] keys) {
     return getI(keys, null);
   }
+  public static int getI(String key, HashMap<String, Object> parent) {
+    return getI(new String[]{key}, parent);
+  }
   public static int getI(String[] keys, HashMap<String, Object> parent) {
     try {
       return (Integer)get(keys, parent); 

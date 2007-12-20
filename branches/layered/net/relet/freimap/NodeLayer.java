@@ -205,6 +205,7 @@ public class NodeLayer implements VisorLayer, DataSourceListener {
 
     //draw nodes
     g.setColor(activeblue);
+    if (nodes != null)
     for (int i=0; i<nodes.size(); i++) {
       FreiNode node=(FreiNode)nodes.elementAt(i);
       if (node.equals(uplink)) continue;

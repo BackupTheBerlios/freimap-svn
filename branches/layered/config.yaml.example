@@ -1,0 +1,45 @@
+# freimap configuration file. Please refer to http://www.yaml.org/start.html or http://www.yaml.org/refcard.html for syntax info.
+--- 
+version: svn
+subversion: 60
+
+background: 
+  type: openstreetmap
+  # use blank, images or openstreetmap
+  delay: 2500
+  filter: dark
+  cachedir: ./gfx/cache
+
+  #type: images
+  #  images:
+  #   - gfx:   gfx/cbase.png  # background image
+  #     lat:   52.520869  # latitude of center of image
+  #     lon:   13.409457  # longitude of center of image
+  #     scale: 40000  # scale - you need to experiment here
+
+datasources:
+  freifunk-map:
+    class: net.relet.freimap.FreifunkMapDataSource
+    url: "file:data/ffmap.xml"
+    # url: "http://map.olsrexperiment.de/freifunkmap.php?getArea=52.6351465262243,13.718490600585938,52.39278242102423,13.1011962890625&z=19"
+
+  olsrd-localhost:
+    class: net.relet.freimap.OLSRDDataSource
+    host: localhost
+    port: 2004
+#    nodefile: ./data/nodes.dump
+    nodesource: freifunk-map
+  
+  
+#  mysql-example:
+#    class: net.relet.freimap.MysqlDataSource
+#    host:  localhost
+#    user:  freimap
+#    pass:  secret
+#    db:    freifunk
+#    tables:
+#      nodes: nodes
+#      links: links
+#  yaml-example:
+#    class: net.relet.freimap.YamlDataSource
+#    url: "http://db.leipzig.freifunk.net"
