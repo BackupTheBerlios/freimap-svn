@@ -3,10 +3,7 @@ package net.relet.freimap;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Hashtable;
-import java.util.StringTokenizer;
-import java.util.LinkedList;
-import java.util.Vector;
+import java.util.*;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -30,9 +27,11 @@ public class FreifunkMapDataSource implements DataSource {
 
 	Vector<FreiNode> nodes = new Vector<FreiNode>();
 
-	public FreifunkMapDataSource() {
+  public void init(HashMap<String, Object> configuration) {
+    String sServerURL = null;
 		try {
-			URL serverURL = new URL(Configurator.get("ffmds.url"));
+      sServerURL = Configurator.getS("url", configuration);
+			URL serverURL = new URL(sServerURL);
 			
 			System.out.println("fetching node data from URL: " + serverURL);
 			System.out.print("This may take a while ... ");
@@ -43,8 +42,7 @@ public class FreifunkMapDataSource implements DataSource {
 			parseXml(dom);
 		} catch (MalformedURLException mue) {
 			System.out.println("failed!");
-			throw new IllegalStateException("Invalid server URL: "
-					+ Configurator.get("fmds.url"));
+			throw new IllegalStateException("Invalid server URL: " + sServerURL);
 		} catch (IOException ioe) {
 			throw new IllegalStateException("IOException while receiving XML");
 		} catch (ParserConfigurationException pce) {
@@ -144,6 +142,11 @@ public class FreifunkMapDataSource implements DataSource {
 		// TODO: Implement me.
 		return 1;
 	}
+
+  public FreiNode getNodeByName(String id) {
+    // TODO: Implement me.
+    return null;
+  }
 
 	public void getLinkCountProfile(FreiNode node, NodeInfo info) {
 		// TODO: Implement me.

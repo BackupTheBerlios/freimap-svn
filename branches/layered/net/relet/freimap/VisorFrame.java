@@ -79,12 +79,16 @@ public class VisorFrame extends JPanel implements ComponentListener, MouseListen
   //crtTime = the second which ought to be displayed, according to user gestures or the flow of time
   //adjustedTime = the above, adjusted to a nearby time which can actually be displayed
   
-  ImageIcon logo1  = new ImageIcon(getClass().getResource("/gfx/logo1.png"));
-  ImageIcon logo2  = new ImageIcon(getClass().getResource("/gfx/logo2.png"));
-  ImageIcon play   = new ImageIcon(getClass().getResource("/gfx/play.png"));
-  ImageIcon stop   = new ImageIcon(getClass().getResource("/gfx/stop.png"));
+  ImageIcon logo1   = new ImageIcon(getClass().getResource("/gfx/logo1.png"));
+  ImageIcon logo2   = new ImageIcon(getClass().getResource("/gfx/logo2.png"));
+  ImageIcon play    = new ImageIcon(getClass().getResource("/gfx/play.png"));
+  ImageIcon stop    = new ImageIcon(getClass().getResource("/gfx/stop.png"));
+  ImageIcon visible = new ImageIcon(getClass().getResource("/gfx/eyeopen.png"));
+  ImageIcon dimmed  = new ImageIcon(getClass().getResource("/gfx/eyedim.png"));
+  ImageIcon hidden  = new ImageIcon(getClass().getResource("/gfx/eyeclosed.png"));
 
   public static Font mainfont = new Font("SansSerif", 0, 12),
+                     mainfontbold = new Font("SansSerif", Font.BOLD, 12),
                      smallerfont = new Font("SansSerif", 0, 9);
 
   public static Color fgcolor = new Color(20,200,20),     //used for text, lines etc., accessed globally! FIXME move these into colorscheme!
@@ -103,6 +107,7 @@ public class VisorFrame extends JPanel implements ComponentListener, MouseListen
              dftime=DateFormat.getTimeInstance(DateFormat.MEDIUM, Locale.GERMANY);
   
   Vector<VisorLayer> layers = new Vector<VisorLayer>();
+  Vector<String> layerids = new Vector<String>();
   VisorLayer activeLayer;
 
   Image buf; //double buffer
@@ -120,17 +125,19 @@ public class VisorFrame extends JPanel implements ComponentListener, MouseListen
     initZoom(0, cx, cy);
   }
 
-  public void addLayer(VisorLayer layer) {
-    addLayer(layer, false);
+  public void addLayer(String id, VisorLayer layer) {
+    addLayer(id, layer, false);
   }
-  public void addLayer(VisorLayer layer, boolean active) {
+  public void addLayer(String id, VisorLayer layer, boolean active) {
     layer.setConverter(converter);
     layer.setDimension(w,h);
     layer.setZoom(zoom);
     if (active) activeLayer=layer;
     layers.add(layer);
+    layerids.add(id);
   }
   public void removeLayer(VisorLayer layer) {
+    layerids.remove(layers.indexOf(layer));
     layers.remove(layer);
   }
   public Dimension getPreferredSize() {
@@ -227,6 +234,33 @@ public class VisorFrame extends JPanel implements ComponentListener, MouseListen
         g.drawString(dftime.format(crtTime*1000), xc, h-65);
       }
     }
+
+    //draw layer name + visibility toggle
+    for (int i=0;i<layers.size();i++) {
+      VisorLayer layer=layers.elementAt(i);
+      g.setFont(mainfont);
+      g.setColor(fgcolor);
+      Image image;
+      switch(layer.getVisibility()) {
+        case VisorLayer.VISIBILITY_NOT: {
+          image = hidden.getImage();
+          break;
+        }
+        case VisorLayer.VISIBILITY_DIM: {
+          image = dimmed.getImage();
+          break;
+        }
+        default: {
+          image = visible.getImage();
+          break;
+        }
+      }
+      g.drawImage(image, 20, 60+i*20, this);
+      if (layer.equals(activeLayer)) {
+        g.setFont(mainfontbold);
+      }
+      g.drawString(layerids.elementAt(i), 50, 75+i*20);
+    }
  
     //draw play/stop button
     if (playing) {
@@ -318,7 +352,14 @@ public class VisorFrame extends JPanel implements ComponentListener, MouseListen
       case MouseEvent.BUTTON1: {
         switch (e.getClickCount()) {
           case 1: {
-            if ((mousey>h-100)&&(mousex >= timelinex0)&&(mousex <= timelinex1)) {
+            if ((mousex>20) && (mousex<40)&& (mousey>60) && (mousey<60+layers.size()*20)) {
+              int selectedLayer = (mousey-60) / 20;
+              layers.elementAt(selectedLayer).toggleVisibility();
+            } else if ((mousex>40) && (mousex<150)&& (mousey>60) && (mousey<60+layers.size()*20)) {
+              int selectedLayer = (mousey-60) / 20;
+              activeLayer.mouseMoved(0,0);
+              activeLayer = layers.elementAt(selectedLayer);
+            } else if ((mousey>h-100)&&(mousex >= timelinex0)&&(mousex <= timelinex1)) {
               setCurrentTime(mousex-timelinex0);
             } else if ((mousey>h-70)&&(mousey<h-45)&&(mousex >= timelinex0-30)&&(mousex <= timelinex1)) {
               playing=!playing;

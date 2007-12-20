@@ -48,6 +48,9 @@ import java.util.*;
 
 public interface DataSource {
 
+/** Initialize this data source with its configuration parameters. **/
+  public void init(HashMap<String, Object> configuration);
+
 /** @return	A Vector of FreiNodes to be displayed. */
   public Vector<FreiNode> getNodeList();
 /** <b>To be deprecated soon.</b>
@@ -76,6 +79,8 @@ public interface DataSource {
     @param	time	A timestamp
     @return	All links which should be displayed at this given time.
 */
+
+  public FreiNode getNodeByName(String id);
 
   public Vector<FreiLink> getLinks(long time);
 /** @param 	dsl	A DataSourceListener listening on events from this DataSource */

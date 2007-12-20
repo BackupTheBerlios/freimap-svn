@@ -40,24 +40,21 @@ public class OLSRDDataSource implements DataSource {
   MysqlDataSource mysqlSource;
   FreifunkMapDataSource ffmdSource;
 
-  boolean useMysqlSource = false;
-  boolean useFFMDSource = false;
+  DataSource nodeSource;
        
   public OLSRDDataSource() {
-    String host = Configurator.get("olsrd.host");
-    String sport= Configurator.get("olsrd.port");
+  }
+  public void init(HashMap<String, Object> conf) {
+    String host = Configurator.getS("host", conf);
+    String sport= Configurator.getS("port", conf);
 
-    nodefile = Configurator.get("olsrd.nodefile");
+    nodefile = Configurator.getS("nodefile", conf);
     //System.out.println("nodefile = "+nodefile);
 
-    String nodesource = Configurator.get("olsrd.nodesource");
+    String snodesource = Configurator.getS("nodesource", conf);
 
-    if (nodesource != null) {
-      if (nodesource.equals("FreifunkMapDataSource")) {
-        useFFMDSource = true;
-      } else if (nodesource.equals("MysqlDataSource")) {
-        useMysqlSource = true;
-      }
+    if (snodesource != null) {
+      nodeSource=Visor.sources.get(snodesource);
     }
 
     if (sport==null) { 
@@ -72,28 +69,15 @@ public class OLSRDDataSource implements DataSource {
       System.err.println("invalid port parameter "+sport);
       System.exit(1);
     }
-    //fetching node data from Mysqldatasource
-    if (useFFMDSource) ffmdSource=new FreifunkMapDataSource();
-    //fetching node data from Mysqldatasource
-    if (useMysqlSource) mysqlSource=new MysqlDataSource();
-    //opening dot plugin connection
     dot = new DotPluginListener(host, port, this);
   }
   
+  @SuppressWarnings("unchecked")
   public Vector<FreiNode> getNodeList() {
-    if (useMysqlSource) {
-      Vector<FreiNode> nodes = mysqlSource.getNodeList();
+    if (nodeSource!=null) {
+      Vector<FreiNode> nodes = nodeSource.getNodeList();
       for (Enumeration<String> enu = generatedNodes.keys(); enu.hasMoreElements();) {
         nodes.add(generatedNodes.get(enu.nextElement()));
-      }
-      return nodes;
-    } else if (useFFMDSource) {
-      Vector<FreiNode> nodes = ffmdSource.getNodeList();
-      for (Enumeration<String> enu = generatedNodes.keys(); enu.hasMoreElements();) {
-        nodes.add(generatedNodes.get(enu.nextElement()));
-      }
-      for (int i=0;i<nodes.size();i++) { //hack
-        knownNodes.put(nodes.elementAt(i).id, nodes.elementAt(i));
       }
       return nodes;
     } else {
@@ -113,7 +97,7 @@ public class OLSRDDataSource implements DataSource {
   }
 
   public FreiNode getNodeByName(String id) {
-    if (useMysqlSource) return mysqlSource.getNodeByName(id);
+    if (nodeSource!=null) return nodeSource.getNodeByName(id);
     else { 
       FreiNode node= knownNodes.get(id);
       if (node!=null) return node;
@@ -122,10 +106,8 @@ public class OLSRDDataSource implements DataSource {
   }
   
   public Hashtable<String, Float> getNodeAvailability(long time) {
-    if (useMysqlSource) {
-      return mysqlSource.getNodeAvailability(time);
-    } else if (useFFMDSource) {
-      return ffmdSource.getNodeAvailability(time);
+    if (nodeSource!=null) {
+      return nodeSource.getNodeAvailability(time);
     } else {
       return new Hashtable<String, Float>(); //empty
     }

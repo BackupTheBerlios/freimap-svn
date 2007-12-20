@@ -25,6 +25,9 @@ package net.relet.freimap;
 import java.awt.Graphics2D;
 
 public interface VisorLayer {
+  public static final int VISIBILITY_NOT  = 0;
+  public static final int VISIBILITY_FULL = 1;
+  public static final int VISIBILITY_DIM  = 2;
 
   /**
    * Paints the layer.
@@ -84,6 +87,11 @@ public interface VisorLayer {
   * @param zoom
   */
  public void setZoom(int zoom);
+
+ /** retrieves selected layer visibility */
+ public int getVisibility();
+ /** toggles visibility between available modes */
+ public void toggleVisibility();
 
  /**
   * Sets the current point in time to be displayed

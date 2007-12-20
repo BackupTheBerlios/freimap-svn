@@ -24,7 +24,7 @@ class TileCache extends Thread {
 
 	public static String TILE_SERVER_URL;
         static {
-		String tileServer = Configurator.get("background.osm.tileserver");
+		String tileServer = Configurator.getS(new String[]{"background","tileserver"});
 		if ((tileServer == null)||(tileServer.equals("mapnik"))) {
 			TILE_SERVER_URL = "http://tile.openstreetmap.org/mapnik/";
 		} else if (tileServer.equals("osmarender")) {
@@ -48,7 +48,7 @@ class TileCache extends Thread {
 	TileCache(TilePainter tp) {
 		this.tp = tp;
 
-		String bgfilter = Configurator.get("background.osm.filter");
+		String bgfilter = Configurator.getS(new String[]{"background","filter"});
 		String resource = (bgfilter != null) && (bgfilter.equals("dark")) ? "gfx/loading_black.png" : "gfx/loading_white.png";
 		REPLACEMENT = new ImageIcon(ClassLoader
 				.getSystemResource(resource));

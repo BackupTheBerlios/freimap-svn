@@ -47,16 +47,16 @@ public class Tile {
   /**
    * Where to cache background tiles, or null if disabled.
    */
-  static String cacheDir = Configurator.get("background.osm.cache.dir");
+  static String cacheDir = Configurator.getS(new String[]{"background","cachedir"});
   /**
    * Background colour filter to be applied
    */
-  static String filter = Configurator.get("background.osm.filter");
+  static String filter = Configurator.getS(new String[]{"background","filter"});
   final static String FILTER_DARK = "dark";
   /**
    * Amount of time to pass until a tile is actually loaded.
    */
-  final static long LOAD_TIMEOUT = Configurator.getI("background.osm.delay"); 
+  final static long LOAD_TIMEOUT = Configurator.getI(new String[]{"background","delay"}); 
    
 
   /**

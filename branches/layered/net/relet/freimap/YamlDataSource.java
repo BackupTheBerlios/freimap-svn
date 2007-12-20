@@ -53,7 +53,9 @@ public class YamlDataSource implements DataSource {
   XStream xstream=new XStream();//DEBUG
   
   public YamlDataSource() {
-    yamlURL = Configurator.get("yaml.url");    
+  }
+  public void init(HashMap<String, Object> conf) {
+    yamlURL = Configurator.getS("url", conf);    
     
     if (useMysqlSource) mysqlSource=new MysqlDataSource("localhost", "root", "", "freiberlin", true);
     
@@ -81,6 +83,7 @@ public class YamlDataSource implements DataSource {
     fetchAvailableTimeStamps();
   }
   
+  @SuppressWarnings("unchecked")
   ArrayList<HashMap> list(Object o) {
     if (!(o instanceof ArrayList)) return null;
     return (ArrayList<HashMap>)o;
@@ -166,13 +169,13 @@ public class YamlDataSource implements DataSource {
       return nodes;
     } else {
       try {
-        ObjectInputStream ois=new ObjectInputStream(getClass().getResourceAsStream(Configurator.get("olsrd.nodefile")));
-        nodes = (Vector<FreiNode>)ois.readObject();
-        ois.close();
+        //ObjectInputStream ois=new ObjectInputStream(getClass().getResourceAsStream(Configurator.get("olsrd.nodefile")));
+        //nodes = (Vector<FreiNode>)ois.readObject();
+        //ois.close();
         //for (int i=0;i<nodes.size();i++) { 
         //  knownNodes.put(nodes.elementAt(i).id, nodes.elementAt(i));
         //}
-        return nodes;
+        //return nodes;
       } catch (Exception ex) {
         ex.printStackTrace();
       }
@@ -207,6 +210,11 @@ public class YamlDataSource implements DataSource {
     //TODO 
     return 1;
   }
+  public FreiNode getNodeByName(String id) {
+    //TODO
+    return null;
+  }
+
   public long getClosestUpdateTime(long time) {
     long cur=-1, id=-1, closest = Long.MAX_VALUE;
     Iterator<YamlState> ki = updateTimes.iterator();
@@ -221,6 +229,8 @@ public class YamlDataSource implements DataSource {
     return id; //yet another hack. this should return a time stamp, not an id. but since it is ***currently*** used only in the next line of 
                //visorframe, it won't affect execution. however, your mind will be severely corrupted in the process. (FIXME!)
   }
+
+  @SuppressWarnings("unchecked")
   public Vector<FreiLink> getLinks(long time) { //hack. expects a yamlstate id, not a timestamp. see directly above. (...FIXME)
     Vector <FreiLink> linkList=new Vector<FreiLink>();
     try {
@@ -257,6 +267,7 @@ public class YamlDataSource implements DataSource {
     //return null;
   }
   
+  @SuppressWarnings("unchecked")
   public FreiNode getNode(Integer id) {
     //fetches full node info by id.
     //updates nodes' status
@@ -306,6 +317,7 @@ public class YamlDataSource implements DataSource {
       new Thread(this).start();
     }
 
+    @SuppressWarnings("unchecked")
     public void run() {
       long offset = firstUpdateTime;
       try {

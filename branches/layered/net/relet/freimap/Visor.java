@@ -25,42 +25,40 @@ package net.relet.freimap;
 import java.awt.*;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
-import java.util.Vector;
+import java.util.*;
 import javax.swing.*;
 
 import net.relet.freimap.background.Background;
 
 public class Visor extends JFrame implements WindowListener {
   public static Configurator config;
+  public static HashMap<String, DataSource> sources;
 
+  @SuppressWarnings("unchecked")
   public static void main(String[] args) {
     config=new Configurator();
     
-    Vector<DataSource> sources = new Vector<DataSource>();
+    sources = new HashMap<String, DataSource>();
     try {
-      int sourcecount = config.getI("DataSource.count");
-      if (sourcecount==-1) {
-        System.err.println("key \"DataSource.count\" not found in configuration file.");
-        if (config.get("DataSource")!=null) {
-          System.err.println("You are using a deprecated configuration file.");
-          System.err.println("Please add the keys \"DataSource.count\" and \"DataSource.1\" (.2, .3, etc.).");
-        }
-        System.exit(1);
-      }
-      
-      for (int i=1; i<=sourcecount; i++) {
-        Class<DataSource> csource=(Class<DataSource>)Class.forName(config.get("DataSource."+i)); //this cast cannot be checked!
+      HashMap<String, Object> ds = (HashMap<String, Object>)config.get("datasources");
+      Iterator<String> i = ds.keySet().iterator();
+      while (i.hasNext()) {
+        String id   = i.next();
+        HashMap<String, Object> subconfig = (HashMap<String, Object>) ds.get(id);
+        String claz = config.getS("class", subconfig);
+        Class<DataSource> csource=(Class<DataSource>)Class.forName(claz); //this cast cannot be checked!
         DataSource source = csource.newInstance();
-        sources.add(source);
+        source.init(subconfig); //initialize datasource with configuration parameters
+        sources.put(id, source);
       }
     } catch (Exception ex) {
       ex.printStackTrace();
       return;
     }
     
-    Background bg = Background.createBackground(Configurator.get("background"));
+    Background bg = Background.createBackground((HashMap<String, Object>)Configurator.get("background"));
     
-    new Visor(sources, bg);
+    new Visor(bg);
   }
   
   VisorFrame viz;
@@ -75,10 +73,10 @@ public class Visor extends JFrame implements WindowListener {
   JMenu     m_help    = new JMenu("Help");
   JMenuItem mi_about  = new JMenu("About");
   
-  public Visor(Vector<DataSource> sources, Background background) {
+  public Visor(Background background) {
     super("http://freimap.berlios.de");
     
-    initLayout(sources, background);
+    initLayout(background);
 
     try {
       while (true) {
@@ -90,11 +88,13 @@ public class Visor extends JFrame implements WindowListener {
     }
   }  
   
-  void initLayout(Vector<DataSource> sources, Background background) {
+  void initLayout(Background background) {
     viz=new VisorFrame(source);
-    viz.addLayer(background);
-    for (int i=0; i<sources.size(); i++) {
-      viz.addLayer(new NodeLayer(sources.elementAt(i)), true);
+    viz.addLayer("Background", background);
+    Iterator<String> i = sources.keySet().iterator();
+      while (i.hasNext()) {
+      String id = i.next();
+      viz.addLayer(id, new NodeLayer(sources.get(id)), true);
     }
     Container c = this.getContentPane();
     

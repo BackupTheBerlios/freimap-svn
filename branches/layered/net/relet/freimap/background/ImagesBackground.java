@@ -3,7 +3,7 @@ package net.relet.freimap.background;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.geom.AffineTransform;
-import java.util.Vector;
+import java.util.*;
 
 import javax.swing.ImageIcon;
 
@@ -20,16 +20,19 @@ class ImagesBackground extends Background {
 
 	Vector<Element> bgitems = new Vector<Element>();
 
-	ImagesBackground() {
-		int num = Configurator.getI("image.count");
-		for (int i = 1; i <= num; i++) {
-			String iname = Configurator.get("image." + i + ".gfx");
+  @SuppressWarnings("unchecked")
+	ImagesBackground(HashMap<String, Object> config) {
+    ArrayList<HashMap<String, Object>> images = (ArrayList<HashMap<String, Object>>)Configurator.get("images", config);
+    Iterator<HashMap<String, Object>> i = images.iterator();
+    while (i.hasNext()) {
+      HashMap<String, Object> iconf = i.next();
+			String iname = Configurator.getS("gfx", iconf);
  			ImageIcon ii = new ImageIcon(ClassLoader.getSystemResource(iname));
 			if (ii!=null) {
-				bgitems.addElement(new Element(ii,				
-					    Configurator.getD("image." + i + ".lon"), Configurator
-							.getD("image." + i + ".lat"), Configurator
-							.getD("image." + i + ".scale")));
+				bgitems.addElement(new Element(ii,
+              Configurator.getD("lon", iconf), 
+              Configurator.getD("lat", iconf), 
+              Configurator.getD("scale", iconf)));
 			} else {
 				System.err.println("Could not create background image: "+ iname);
                         }
@@ -37,6 +40,7 @@ class ImagesBackground extends Background {
 	}
 
 	public void paint(Graphics2D g) {
+    if (visible == 0) return;
 		// draw backgrounds
 		for (int i = 0; i < bgitems.size(); i++) {
 			Element e = bgitems.elementAt(i);

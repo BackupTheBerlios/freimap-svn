@@ -65,11 +65,16 @@ public class NodeLayer implements VisorLayer, DataSourceListener {
   //FIXME the following paragraph is identical and static in VisorFrame. Use these definitions and remove the paragraph.
   public static Font mainfont = new Font("SansSerif", 0, 12),
                      smallerfont = new Font("SansSerif", 0, 9);
-  public static Color fgcolor = new Color(20,200,20),     //used for text, lines etc., accessed globally! FIXME move these into colorscheme!
-                bgcolor = new Color(64,128,64,196),       //used for transparent backgrounds of most status boxes
-                fgcolor2 = new Color(150,150,255),       //used for foreground of link status boxes
-                bgcolor2 = new Color(40,40,192,196);       //used for transparent backgrounds of link status boxes
-  ColorScheme cs = ColorScheme.NO_MAP;
+  public Color fgcolor = new Color(20,200,20),     //used for text, lines etc.
+               bgcolor = new Color(64,128,64,196),       //used for transparent backgrounds of most status boxes
+               fgcolor2 = new Color(150,150,255),       //used for foreground of link status boxes
+               bgcolor2 = new Color(40,40,192,196),       //used for transparent backgrounds of link status boxes
+               activeblue = Color.cyan,
+               activeyellow = Color.yellow,
+               activegreen = Color.green,
+               activewhite = Color.white;
+  public int   currentalpha = 255;
+  //ColorScheme cs = ColorScheme.NO_MAP;
 
   DataSource source;
 
@@ -84,6 +89,7 @@ public class NodeLayer implements VisorLayer, DataSourceListener {
 
   long crtTime;
 
+  int visible = VISIBILITY_FULL;
 
   public NodeLayer(DataSource source) {
     this.source=source;
@@ -126,8 +132,10 @@ public class NodeLayer implements VisorLayer, DataSourceListener {
    * @param g, a Graphics2D object.
    */
   public void paint(Graphics2D g) {
+    if (visible == 0) return;
+
     if (!transparent) {
-      g.setColor(cs.getColor(ColorScheme.Key.MAP_BACKGROUND));
+      g.setColor(Color.black);
       g.fillRect(0,0,w,h);
     } 
 
@@ -159,7 +167,7 @@ public class NodeLayer implements VisorLayer, DataSourceListener {
       for(int i = 0; i < links.size(); i++) {
         FreiLink link = (FreiLink)links.elementAt(i);
         if (link.to.equals(uplink)) {
-          g.setColor(Color.cyan);
+          g.setColor(activeblue);
           g.setStroke(cableStroke);
           double nsize = Math.min(45,Math.round(0.0015 * scale));
           g.drawOval((int)(converter.lonToViewX(link.from.lon)-nsize/2), (int)(converter.latToViewY(link.from.lat)-nsize/2), (int)(nsize), (int)(nsize));
@@ -167,12 +175,12 @@ public class NodeLayer implements VisorLayer, DataSourceListener {
         } else {
           float green = 1;
           if (link.HNA || (link.etx < 0)) {
-            g.setColor(Color.cyan);
+            g.setColor(activeblue);
           } else if (link.etx<1) {
-            g.setColor(Color.white);
+            g.setColor(activewhite);
           } else {
             green=1/link.etx;
-            g.setColor(new Color(1-green, green, 0.5f));
+            g.setColor(new Color(1-green, green, 0.5f, currentalpha/255.0f));
           }
           if ((link.from.lat != link.from.DEFAULT_LAT) && (link.to.lat != link.to.DEFAULT_LAT)) //ignore links to truly unlocated nodes (at default position)
             g.drawLine(converter.lonToViewX(link.from.lon),
@@ -196,19 +204,19 @@ public class NodeLayer implements VisorLayer, DataSourceListener {
     }
 
     //draw nodes
-    g.setColor(cs.getColor(ColorScheme.Key.NODE_UPLINK));
+    g.setColor(activeblue);
     for (int i=0; i<nodes.size(); i++) {
       FreiNode node=(FreiNode)nodes.elementAt(i);
       if (node.equals(uplink)) continue;
       if (node.unlocated) {
-        g.setColor(cs.getColor(ColorScheme.Key.NODE_UNLOCATED));
+        g.setColor(activeyellow);
       } else if (availmap!=null) {
         Object oavail = availmap.get(node.id);
         if (oavail==null) {
-          g.setColor(cs.getColor(ColorScheme.Key.NODE_UNAVAILABLE));
+          g.setColor(activewhite);
         } else {
           float avail = (float)Math.sqrt(((Float)oavail).floatValue()); 
-          g.setColor(new Color(1.0f-avail, avail, 0.5f));
+          g.setColor(new Color(1.0f-avail, avail, 0.5f, currentalpha/255.0f));
         }
       }
       double nsize = Math.max(1,Math.min(15,Math.round(0.0003 * scale)));
@@ -330,7 +338,7 @@ public class NodeLayer implements VisorLayer, DataSourceListener {
     	g.fill(box); 
         g.setPaint(myfgcolor);
     	g.draw(box);
-	g.setColor(showNodeInfo?Color.green:Color.cyan); 
+	g.setColor(showNodeInfo?activegreen:activeblue); 
         g.setFont(VisorFrame.mainfont);
 	g.drawString(label, (int)(boxx - boxw/2 + 10), (int)(boxy - boxh/2 + labelh));
 	g.setColor(myfgcolor); 
@@ -414,6 +422,9 @@ public class NodeLayer implements VisorLayer, DataSourceListener {
   public boolean isTransparent() {
     return transparent;
   }
+  public int getVisibility() {
+    return visible;
+  }
 
   /**
    * Attempts to set transparency to this VisorLayer.
@@ -422,6 +433,36 @@ public class NodeLayer implements VisorLayer, DataSourceListener {
   public void setTransparent(boolean t) {
     this.transparent=t;
   }
+
+  public void toggleVisibility() {
+    visible = (visible + 1) %3;
+    resetColorScheme();
+  }
+
+  void resetColorScheme() {
+    if (visible == VISIBILITY_DIM) {
+      currentalpha = 63;
+      fgcolor = new Color(20,200,20,currentalpha);     //used for text, lines etc.
+      bgcolor = new Color(64,128,64,currentalpha/2);       //used for transparent backgrounds of most status boxes
+      fgcolor2 = new Color(150,150,255,currentalpha);       //used for foreground of link status boxes
+      bgcolor2 = new Color(40,40,192,currentalpha/2);       //used for transparent backgrounds of link status boxes
+      activeblue = new Color(0,0,255,currentalpha);
+      activewhite = new Color(255,255,255,currentalpha);
+      activegreen = new Color(0,255,0,currentalpha);
+      activeyellow = new Color(255,255,0,currentalpha);
+    } else {
+      currentalpha = 255;
+      fgcolor = new Color(20,200,20);     //used for text, lines etc.
+      bgcolor = new Color(64,128,64,196);       //used for transparent backgrounds of most status boxes
+      fgcolor2 = new Color(150,150,255);       //used for foreground of link status boxes
+      bgcolor2 = new Color(40,40,192,196);       //used for transparent backgrounds of link status boxes
+      activeblue = Color.cyan;
+      activewhite = Color.white;
+      activegreen = Color.green;
+      activeyellow = Color.yellow;
+    }
+  }
+
 
  /**
    * Sets the scaling converter for this background.
@@ -469,6 +510,7 @@ public class NodeLayer implements VisorLayer, DataSourceListener {
   */
  public boolean setCurrentTime(long crtTime) {
    long adjusted=source.getClosestUpdateTime(crtTime);
+   //FIXME: if the interval between crtTime and the closest Display time is too high, display nothing.
    if (adjusted != this.crtTime) {
      links = source.getLinks(this.crtTime);
      this.crtTime = adjusted;

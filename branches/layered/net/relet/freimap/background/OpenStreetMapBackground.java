@@ -17,7 +17,7 @@ class OpenStreetMapBackground extends Background {
 	TileCache tileCache;
 
 	OpenStreetMapBackground() {
-		TilePainter tp = new TilePainter() {
+    TilePainter tp = new TilePainter() {
 			public void paint(Graphics2D g, Image image, int worldX, int worldY) {
 				g.drawImage(image, converter.worldToViewX(worldX), converter.worldToViewY(worldY),
 						null);
@@ -28,6 +28,7 @@ class OpenStreetMapBackground extends Background {
 	}
 
 	public void paint(Graphics2D g) {
+    if (visible == 0) return;
 		tileCache.paintTiles(g, zoom, converter.offsetX, converter.offsetY, width, height);
 	}
 	
@@ -38,7 +39,7 @@ class OpenStreetMapBackground extends Background {
 
 	public ColorScheme getColorScheme()
 	{
-		String filter = Configurator.get("background.osm.filter");
+		String filter = Configurator.getS(new String[]{"background","filter"});
 		if ((filter!=null)&&(filter.equals("dark"))) {
 			return ColorScheme.NO_MAP;
 		}

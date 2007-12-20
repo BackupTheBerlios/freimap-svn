@@ -26,9 +26,6 @@ import java.util.*;
 import java.sql.*;
 
 public class MysqlDataSource implements DataSource {
-  private final static String TABLE_LINKS = Configurator.get("mysql.tables.links");
-  private final static String TABLE_NODES = Configurator.get("mysql.tables.nodes");
-  //private final static String TABLE_LINKS = "links_hourly";
   
   private Vector<FreiNode> nodeList=new Vector<FreiNode>();
   private Hashtable<String, FreiNode> nodeByName=new Hashtable<String, FreiNode>(); //fixme: not effective
@@ -42,15 +39,31 @@ public class MysqlDataSource implements DataSource {
                firstAvailableTime = 1,
                lastAvailableTime = 1;
   private DataSourceListener listener=null;
+
+  private String host, user, pass, db;
+  private String TABLE_LINKS;
+  private String TABLE_NODES;
+  private boolean nodeDataOnly = false;
   
   public MysqlDataSource() {
     this(null, null, null, null, false);
   }
   public MysqlDataSource(String host, String user, String pass, String db, boolean nodeDataOnly) {
-    if (host==null) host=Configurator.get("mysql.host");
-    if (pass==null) pass=Configurator.get("mysql.pass");
-    if (user==null) user=Configurator.get("mysql.user");
-    if (db  ==null) db  =Configurator.get("mysql.db");
+    this.host=host;
+    this.user=user;
+    this.pass=pass;
+    this.db  =db;
+    this.nodeDataOnly = nodeDataOnly;
+  }
+
+  public void init(HashMap<String, Object> conf) {
+    if (host==null) host=Configurator.getS("host", conf);
+    if (pass==null) pass=Configurator.getS("pass", conf);
+    if (user==null) user=Configurator.getS("user", conf);
+    if (db  ==null) db  =Configurator.getS("db", conf);
+
+    TABLE_LINKS = Configurator.getS(new String[]{"tables", "links"}, conf);
+    TABLE_NODES = Configurator.getS(new String[]{"tables", "nodes"}, conf);
     //todo: dummy check input
     try {
       String odbcurl="jdbc:mysql://"+host+"/"+db;
