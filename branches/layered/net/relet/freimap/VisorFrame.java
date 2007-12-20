@@ -175,16 +175,16 @@ public class VisorFrame extends JPanel implements ComponentListener, MouseListen
     g.setPaint(bgcolor);
     g.setStroke(new BasicStroke((float)3f));
     int x0=timelinex0, x1=timelinex1; 
-    g.draw(new Line2D.Double(x0, h-60, x1, h-60));
+    g.draw(new Line2D.Double(x0, h-57, x1, h-57));
 
-    long fUT = Long.MAX_VALUE, lUT = 0;
+    long fUT = Long.MAX_VALUE, lUT = -1;
     for (int i=0;i<layers.size();i++) {
       DataSource source=layers.elementAt(i).getSource();
       if (source==null) continue;
       long sfUT = source.getFirstUpdateTime(),    //the time interval which can theoretically be fetched by the source
            slUT = source.getLastUpdateTime();
-      if (sfUT<fUT) fUT=sfUT;
-      if (slUT>lUT) lUT=slUT;
+      if ((sfUT>1) && (sfUT<fUT)) fUT=sfUT;
+      if ((slUT>1) && (slUT>lUT)) lUT=slUT;
     }
 
     for (int i=0;i<layers.size();i++) {
@@ -199,7 +199,8 @@ public class VisorFrame extends JPanel implements ComponentListener, MouseListen
         int tmin = (int)Math.round((double)(fAT - fUT) / (lUT - fUT) * (x1-x0) + x0),
             tmax = (int)Math.round((double)(lAT - fUT) / (lUT - fUT) * (x1-x0) + x0);
         g.setPaint(fgcolor);
-        g.draw(new Line2D.Double(tmin, h-60, tmax, h-60));
+        g.setStroke(new BasicStroke((float)3f));
+        g.draw(new Line2D.Double(tmin, h-57-i*3, tmax, h-57-i*3));
 
         if ((selectedTime>0) && (selectedTime < tmax)) {
           g.setPaint(Color.green);
@@ -321,6 +322,7 @@ public class VisorFrame extends JPanel implements ComponentListener, MouseListen
               setCurrentTime(mousex-timelinex0);
             } else if ((mousey>h-70)&&(mousey<h-45)&&(mousex >= timelinex0-30)&&(mousex <= timelinex1)) {
               playing=!playing;
+              if (crtTime==0) setCurrentTime(0);
             }
             this.repaint();
             break;
@@ -348,8 +350,8 @@ public class VisorFrame extends JPanel implements ComponentListener, MouseListen
       if (source==null) continue;
       long sfUT = source.getFirstUpdateTime(),    //the time interval which can theoretically be fetched by the source
            slUT = source.getLastUpdateTime();
-      if (sfUT<fUT) fUT=sfUT;
-      if (slUT>lUT) lUT=slUT;
+      if ((sfUT>1) && (sfUT<fUT)) fUT=sfUT;
+      if ((slUT>1) && (slUT>lUT)) lUT=slUT;
     }
 
     long time = (long)(fUT + (lUT - fUT) * ((double)x) / (timelinex1-timelinex0));
@@ -405,9 +407,13 @@ public class VisorFrame extends JPanel implements ComponentListener, MouseListen
 
   public void nextFrame() {
     if (playing) crtTime += 1;
+    boolean repaint = false;
     for (int i=0; i<layers.size(); i++) {
       DataSource source = layers.elementAt(i).getSource();
-      if (source!=null) layers.elementAt(i).setCurrentTime(crtTime);
+      if (source!=null) {
+        repaint = repaint || layers.elementAt(i).setCurrentTime(crtTime);
+      }
     }
+    if (repaint) this.repaint();
   }
 }

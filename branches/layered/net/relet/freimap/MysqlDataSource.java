@@ -114,15 +114,17 @@ public class MysqlDataSource implements DataSource {
   }
 
   public long getLastUpdateTime() {
+    long newLastUpdateTime=-1;
     try {
       Statement s = conn.createStatement();
       ResultSet r = s.executeQuery("SELECT unix_timestamp(max(clock)) as last from "+TABLE_LINKS+" WHERE clock>from_unixtime("+lastUpdateTime+")");
       if (r.next()) {
-        lastUpdateTime = r.getLong("last");
+        newLastUpdateTime = r.getLong("last");
       }
     } catch (Exception ex) {
       ex.printStackTrace();
     }
+    if (newLastUpdateTime > lastUpdateTime) lastUpdateTime = newLastUpdateTime;
     return lastUpdateTime;
   }
 
@@ -191,6 +193,7 @@ public class MysqlDataSource implements DataSource {
   
   public Vector<FreiLink> getLinks(long time) {
     linkList=new Vector<FreiLink>();
+    if ((time<=0) /* || (time>MAX_UNIX_TIME)*/ ) return linkList; //empty
     try {
       Statement s = conn.createStatement();
       ResultSet r = s.executeQuery("SELECT HIGH_PRIORITY * from "+TABLE_LINKS+" where clock=from_unixtime("+time+")");
@@ -218,6 +221,7 @@ public class MysqlDataSource implements DataSource {
         }
       }
     } catch (Exception ex) {
+      System.out.println("clock = "+time);
       ex.printStackTrace();
     }
     return linkList;

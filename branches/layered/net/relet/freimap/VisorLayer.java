@@ -89,8 +89,9 @@ public interface VisorLayer {
   * Sets the current point in time to be displayed
   * 
   * @param crtTime, an unix time stamp
+  * @return true, if the layer has to be repainted consequently
   */
- public void setCurrentTime(long crtTime);
+ public boolean setCurrentTime(long crtTime);
 
  public void mouseMoved(double lat, double lon);
  public void mouseClicked(double lat, double lon, int button);

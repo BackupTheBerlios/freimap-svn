@@ -396,8 +396,8 @@ public class NodeLayer implements VisorLayer, DataSourceListener {
       node=nodes.elementAt(i);
       double d = Math.abs(node.lon - lon) + Math.abs(node.lat - lat); //no need to sqrt here
       if (d<dmin) {
-	dmin=d;
-	closest=node;
+	      dmin=d;
+	      closest=node;
       }
     }
     selectedNodeDistance = (closest==null)?dmin:dist(closest.lon, lon, closest.lat, lat); //recalculate exact distance
@@ -465,10 +465,16 @@ public class NodeLayer implements VisorLayer, DataSourceListener {
   * Sets the current point in time to be displayed
   * 
   * @param crtTime, an unix time stamp
+  * @return true, if the layer has to be repainted
   */
- public void setCurrentTime(long crtTime) {
-   this.crtTime=source.getClosestUpdateTime(crtTime);
-   links = source.getLinks(this.crtTime);
+ public boolean setCurrentTime(long crtTime) {
+   long adjusted=source.getClosestUpdateTime(crtTime);
+   if (adjusted != this.crtTime) {
+     links = source.getLinks(this.crtTime);
+     this.crtTime = adjusted;
+     return true;
+   }
+   return false;
  }
 
  public void mouseMoved(double lat, double lon) {

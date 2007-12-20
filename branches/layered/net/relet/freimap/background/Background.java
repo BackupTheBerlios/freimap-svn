@@ -64,7 +64,7 @@ public abstract class Background implements VisorLayer {
    */
   public DataSource getSource() { return null; }
 
-  public void setCurrentTime(long crtTime) {}
+  public boolean setCurrentTime(long crtTime) { return false; }
 
 	/**
 	 * Sets the <code>Background</code>s zoom.

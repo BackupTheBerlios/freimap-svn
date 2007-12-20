@@ -34,9 +34,10 @@ public class Configurator {
   };
 
   private static final String[][] CONFIG_DEFAULTS = new String[][]{
-    {"DataSource", "net.relet.freimap.FreifunkMapDataSource", "# net.relet.freimap.{FreifunkMap|OLSRD|Mysql}DataSource"},
-    {"#DataSource", "net.relet.freimap.OLSRDDataSource", ""},
-    {"#DataSource", "net.relet.freimap.MysqlDataSource", ""},
+    {"DataSource.count", "# number of data layers"},
+    {"DataSource.1", "net.relet.freimap.FreifunkMapDataSource", "# net.relet.freimap.{FreifunkMap|OLSRD|Mysql}DataSource"},
+    {"#DataSource.1", "net.relet.freimap.OLSRDDataSource", ""},
+    {"#DataSource.1", "net.relet.freimap.MysqlDataSource", ""},
     {"background", "blank", "# Use blank, images or openstreetmap" },
     {"background.osm.delay", "2500", "# wait this number of milliseconds before fetching background tiles"}, 
     {"#background.osm.filter", "dark", "# apply a colour filter to openstreetmap tiles (use 'dark' or 'none')"}, 
