@@ -87,6 +87,7 @@ class TileCache extends Thread {
 	}
 
 	private void createTile(int zoom, int tx, int ty) {
+    if (zoom>18) return;
 		String tileName = zoom + "/" + tx + "/" + ty + ".png";
 
 		try {

@@ -114,6 +114,9 @@ public class VisorFrame extends JPanel implements ComponentListener, MouseListen
 
   Converter converter = new Converter();
 
+  String location = "http://freimap.berlios.de";
+  NameFinder namefinder = new NameFinder();
+
   public VisorFrame(DataSource source) {
 
     this.addComponentListener(this);
@@ -283,12 +286,13 @@ public class VisorFrame extends JPanel implements ComponentListener, MouseListen
     g.draw(menus);
     g.draw(footer);
     g.setFont(mainfont);
-    g.drawString("{ http://freimap.berlios.de };", 10, 20); //TODO: replace this string by location information gathered from osm namefinder api :) 
-    g.drawString("coom " + zoom + "/17", w/4, 20);
+    //location = namefinder.getLocation();
+    g.drawString("{ "+location+" };", 10, 20); //TODO: replace this string by location information gathered from osm namefinder api :) 
+    g.drawString("coom " + zoom, w/4, 20);
     g.drawString("lon " + converter.viewXToLon(mousex), w/2, 20);
     g.drawString("lat " + converter.viewYToLat(mousey), 3*w/4, 20);
     g.drawString(new Date(crtTime*1000).toString(), 10, h-10);
-    
+
     long free  =runtime.freeMemory(),
          //total =runtime.totalMemory(),
          max   =runtime.maxMemory();
@@ -415,6 +419,7 @@ public class VisorFrame extends JPanel implements ComponentListener, MouseListen
       switch(mouseMode) {
         case MouseEvent.BUTTON1:
           converter.setWorldRel(mrefx - mousex, mrefy - mousey);
+          //namefinder.setLocation(converter.viewYToLat(cy), converter.viewXToLon(cx), zoom);
           
           mrefx = mousex;
           mrefy = mousey;
@@ -432,7 +437,7 @@ public class VisorFrame extends JPanel implements ComponentListener, MouseListen
     Point p = e.getPoint();
     
 	zoom += ((e.getWheelRotation() < 0) ? +1 : -1);
-	zoom = Math.min(17, Math.max(0, zoom));
+	zoom = Math.min(22, Math.max(0, zoom));
 	
 	initZoom(zoom, p.x, p.y);
 	
