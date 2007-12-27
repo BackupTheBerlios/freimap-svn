@@ -117,7 +117,7 @@ public class VisorFrame extends JPanel implements ComponentListener, MouseListen
   String location = "http://freimap.berlios.de";
   NameFinder namefinder = new NameFinder();
 
-  public VisorFrame(DataSource source) {
+  public VisorFrame() {
 
     this.addComponentListener(this);
     this.addMouseListener(this);
@@ -375,7 +375,7 @@ public class VisorFrame extends JPanel implements ComponentListener, MouseListen
           case 2: {
               zoom=zoom+1; //DEBUG only
               initZoom(zoom, mousex, mousey);
-//            System.out.println("Center on: "+lat+" "+lon);
+              System.out.println("Clicked on: "+lat+" "+lon);
 //            centerOn(e.getPoint());
             break;
           }

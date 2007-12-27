@@ -2,4 +2,4 @@ if [ x$JAVA == x ]; then
 	JAVA=java
 fi
 
-$JAVA -Xmx500m -jar freimap*.jar
+$JAVA -Xmx250m -jar freimap*.jar

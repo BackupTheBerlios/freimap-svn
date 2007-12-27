@@ -25,19 +25,23 @@ class ImagesBackground extends Background {
     ArrayList<HashMap<String, Object>> images = (ArrayList<HashMap<String, Object>>)Configurator.get("images", config);
     Iterator<HashMap<String, Object>> i = images.iterator();
     while (i.hasNext()) {
-      HashMap<String, Object> iconf = i.next();
-			String iname = Configurator.getS("gfx", iconf);
- 			ImageIcon ii = new ImageIcon(ClassLoader.getSystemResource(iname));
+      		HashMap<String, Object> iconf = i.next();
+		String iname = Configurator.getS("gfx", iconf);
+ 		try {
+			ImageIcon ii = new ImageIcon(ClassLoader.getSystemResource(iname));
 			if (ii!=null) {
 				bgitems.addElement(new Element(ii,
-              Configurator.getD("lon", iconf), 
-              Configurator.getD("lat", iconf), 
-              Configurator.getD("scale", iconf)));
+              			Configurator.getD("lon", iconf), 
+              			Configurator.getD("lat", iconf), 
+              			Configurator.getD("scale", iconf)));
 			} else {
 				System.err.println("Could not create background image: "+ iname);
                         }
-		}
+		} catch (Exception ex) {
+			System.err.println("Could not find background image:" + iname);
+                }
 	}
+    }
 
 	public void paint(Graphics2D g) {
     if (visible == 0) return;
@@ -54,8 +58,7 @@ class ImagesBackground extends Background {
 			int yc = converter.worldToViewY((int) (converter.latToWorld(e.lat) - h2
 					* rscale));
 
-			g.drawImage(img,
-					new AffineTransform(rscale, 0d, 0d, rscale, xc, yc), null);
+			g.drawImage(img, new AffineTransform(rscale, 0d, 0d, rscale, xc, yc), null);
 		}
 	}
 

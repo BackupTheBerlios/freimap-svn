@@ -162,8 +162,8 @@ public abstract class Background implements VisorLayer {
 	 * 
 	 * @return
 	 */
-	public static Background createOpenStreetMapBackground() {
-		return new OpenStreetMapBackground();
+	public static Background createOpenStreetMapBackground(HashMap<String, Object> config) {
+		return new OpenStreetMapBackground(config);
 	}
 	
 	/**
@@ -201,7 +201,7 @@ public abstract class Background implements VisorLayer {
 			return createImagesBackground(config);
 
 		if (type.equalsIgnoreCase("openstreetmap"))
-			return createOpenStreetMapBackground();
+			return createOpenStreetMapBackground(config);
 
 		System.err.println("warning: no valid background specified (" + type
 				+ "). Defaulting to blank.");

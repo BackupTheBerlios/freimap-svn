@@ -112,7 +112,9 @@ public class Configurator {
   }
   public static double getD(String[] keys, HashMap<String, Object> parent) {
     try {
-      return (Double)get(keys, parent); 
+      Object o = get(keys, parent);
+      if (o instanceof Double) return ((Double)o).doubleValue();
+      if (o instanceof Integer) return ((Integer)o).doubleValue();
     } catch (Exception ex) {
     }
     return Double.NaN;

@@ -23,17 +23,7 @@ import net.relet.freimap.OSMMercatorProjection;
 class TileCache extends Thread {
 
 	public static String TILE_SERVER_URL;
-        static {
-		String tileServer = Configurator.getS(new String[]{"background","tileserver"});
-		if ((tileServer == null)||(tileServer.equals("mapnik"))) {
-			TILE_SERVER_URL = "http://tile.openstreetmap.org/mapnik/";
-		} else if (tileServer.equals("osmarender")) {
-			TILE_SERVER_URL = "http://dev.openstreetmap.org/~ojw/Tiles/tile.php/";
-		} else {
-			System.out.println("Unknown tile server. Using user provided URL "+tileServer);
-			TILE_SERVER_URL = tileServer;
-		}
-	}
+        public static String tileServer;
         
 	HashMap<Long, Tile> cache = new HashMap<Long, Tile>();
 
@@ -42,13 +32,25 @@ class TileCache extends Thread {
 	private LinkedList<Tile> loadQueue = new LinkedList<Tile>();
 
 	private TilePainter tp;
-	
+        HashMap<String, Object> config;
+
 	private volatile int zoom;
 
-	TileCache(TilePainter tp) {
+	TileCache(TilePainter tp, HashMap<String, Object> config) {
 		this.tp = tp;
+ 		this.config = config;
 
-		String bgfilter = Configurator.getS(new String[]{"background","filter"});
+                tileServer = Configurator.getS("tileserver", config);
+		if ((tileServer == null)||(tileServer.equals("mapnik"))) {
+			TILE_SERVER_URL = "http://tile.openstreetmap.org/mapnik/";
+		} else if (tileServer.equals("osmarender")) {
+			TILE_SERVER_URL = "http://dev.openstreetmap.org/~ojw/Tiles/tile.php/";
+		} else {
+			System.out.println("Unknown tile server. Using user provided URL "+tileServer);
+			TILE_SERVER_URL = tileServer;
+		}
+     
+		String bgfilter = Configurator.getS("filter", config);
 		String resource = (bgfilter != null) && (bgfilter.equals("dark")) ? "gfx/loading_black.png" : "gfx/loading_white.png";
 		REPLACEMENT = new ImageIcon(ClassLoader
 				.getSystemResource(resource));
@@ -117,12 +119,13 @@ class TileCache extends Thread {
 		int y1 = OSMMercatorProjection.worldToTile(Math.max(wy, 0)); 
 		int y2 = Math.min(OSMMercatorProjection.worldToTile(wy + wh), max); 
 		
-		for (int ty = y1; ty <= y2; ty++) {
+		if (zoom <= 18) {
+ 		  for (int ty = y1; ty <= y2; ty++) {
 			for (int tx = x1; tx <= x2; tx++) {
 				Tile tile = cache.get(key(zoom, tx, ty));
 				if (tile == null) {
 					createTile(zoom, tx, ty);
-					tp.paint(g, REPLACEMENT.getImage(), tx << 8, ty << 8);
+  					tp.paint(g, REPLACEMENT.getImage(), tx << 8, ty << 8);
 				} else if (tile.image == null) {
 					// Image is not there.
 					
@@ -134,12 +137,13 @@ class TileCache extends Thread {
 							loadQueue.notifyAll();
 						}
 					}
-					tp.paint(g, REPLACEMENT.getImage(), tx << 8, ty << 8);
-
+		 			tp.paint(g, REPLACEMENT.getImage(), tx << 8, ty << 8);
+					
 				} else
 					tp.paint(g, tile.image, tx << 8, ty << 8);
 
 			}
+		  }
 		}
 	}
 

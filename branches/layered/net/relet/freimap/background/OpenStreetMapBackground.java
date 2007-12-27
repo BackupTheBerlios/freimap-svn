@@ -2,6 +2,8 @@ package net.relet.freimap.background;
 
 import java.awt.Graphics2D;
 import java.awt.Image;
+import java.util.HashMap;
+
 
 import net.relet.freimap.ColorScheme;
 import net.relet.freimap.Configurator;
@@ -15,8 +17,12 @@ import net.relet.freimap.Configurator;
  */
 class OpenStreetMapBackground extends Background {
 	TileCache tileCache;
+        HashMap<String, Object> config;
 
-	OpenStreetMapBackground() {
+	OpenStreetMapBackground(HashMap<String, Object> config) {
+          this.config = config;
+          Tile.init(config);
+
     TilePainter tp = new TilePainter() {
 			public void paint(Graphics2D g, Image image, int worldX, int worldY) {
 				g.drawImage(image, converter.worldToViewX(worldX), converter.worldToViewY(worldY),
@@ -24,7 +30,7 @@ class OpenStreetMapBackground extends Background {
 			}
 		};
 
-		tileCache = new TileCache(tp);
+		tileCache = new TileCache(tp, config);
 	}
 
 	public void paint(Graphics2D g) {
@@ -39,7 +45,7 @@ class OpenStreetMapBackground extends Background {
 
 	public ColorScheme getColorScheme()
 	{
-		String filter = Configurator.getS(new String[]{"background","filter"});
+		String filter = Configurator.getS("filter", config);
 		if ((filter!=null)&&(filter.equals("dark"))) {
 			return ColorScheme.NO_MAP;
 		}

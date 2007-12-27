@@ -33,6 +33,7 @@ import net.relet.freimap.background.Background;
 public class Visor extends JFrame implements WindowListener {
   public static Configurator config;
   public static HashMap<String, DataSource> sources;
+  public static HashMap<String, Background> backgrounds;
 
   @SuppressWarnings("unchecked")
   public static void main(String[] args) {
@@ -55,14 +56,26 @@ public class Visor extends JFrame implements WindowListener {
       ex.printStackTrace();
       return;
     }
-    
-    Background bg = Background.createBackground((HashMap<String, Object>)Configurator.get("background"));
-    
-    new Visor(bg);
+
+    backgrounds = new HashMap<String, Background>();
+    try {
+      HashMap<String, Object> bgs = (HashMap<String, Object>)config.get("backgrounds");
+      Iterator<String> i = bgs.keySet().iterator();
+      while (i.hasNext()) {
+        String id   = i.next();
+        HashMap<String, Object> subconfig = (HashMap<String, Object>) bgs.get(id);
+        Background newbg = Background.createBackground(subconfig);
+        backgrounds.put(id, newbg);
+      }
+    } catch (Exception ex) {
+      ex.printStackTrace();
+      return;
+    }
+   
+    new Visor();
   }
   
   VisorFrame viz;
-  DataSource source;
 
   JMenuBar  bar = new JMenuBar();
   JMenu     m_source  = new JMenu("Source");
@@ -73,10 +86,10 @@ public class Visor extends JFrame implements WindowListener {
   JMenu     m_help    = new JMenu("Help");
   JMenuItem mi_about  = new JMenu("About");
   
-  public Visor(Background background) {
+  public Visor() {
     super("http://freimap.berlios.de");
     
-    initLayout(background);
+    initLayout();
 
     try {
       while (true) {
@@ -88,10 +101,14 @@ public class Visor extends JFrame implements WindowListener {
     }
   }  
   
-  void initLayout(Background background) {
-    viz=new VisorFrame(source);
-    viz.addLayer("Background", background);
-    Iterator<String> i = sources.keySet().iterator();
+  void initLayout() {
+    viz=new VisorFrame();
+    Iterator<String> i = backgrounds.keySet().iterator();
+      while (i.hasNext()) {
+      String id = i.next();
+      viz.addLayer(id, backgrounds.get(id), true);
+    }
+    i = sources.keySet().iterator();
       while (i.hasNext()) {
       String id = i.next();
       viz.addLayer(id, new NodeLayer(sources.get(id)), true);

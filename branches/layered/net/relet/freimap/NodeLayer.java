@@ -142,16 +142,16 @@ public class NodeLayer implements VisorLayer, DataSourceListener {
     g.setFont(VisorFrame.mainfont);
 
     //draw links
-    Stroke linkStroke = new BasicStroke((float)(Math.min(5,0.00005 * scale)), BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
-    Stroke cableStroke = new BasicStroke((float)(Math.min(15,0.00015 * scale)), BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
-    Stroke selectedStroke = new BasicStroke((float)(Math.min(30,0.00030 * scale)), BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
+    Stroke linkStroke = new BasicStroke((float)(Math.min(2,0.00005 * scale)), BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
+    Stroke cableStroke = new BasicStroke((float)(Math.min(10,0.00015 * scale)), BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
+    Stroke selectedStroke = new BasicStroke((float)(Math.min(20,0.00030 * scale)), BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
 
     //draw selected link extra thick
     if (selectedLink != null) {
       g.setStroke(selectedStroke);
       g.setColor(fgcolor2);
       if (selectedLink.to.equals(uplink)) {
-        double nsize = Math.min(45,Math.round(0.0015 * scale));
+        double nsize = Math.min(25,Math.round(0.0015 * scale));
         g.drawOval((int)(converter.lonToViewX(selectedLink.from.lon)-nsize/2), (int)(converter.latToViewY(selectedLink.from.lat)-nsize/2), (int)(nsize), (int)(nsize));
       } else {
         g.drawLine(converter.lonToViewX(selectedLink.from.lon),
@@ -169,7 +169,7 @@ public class NodeLayer implements VisorLayer, DataSourceListener {
         if (link.to.equals(uplink)) {
           g.setColor(activeblue);
           g.setStroke(cableStroke);
-          double nsize = Math.min(45,Math.round(0.0015 * scale));
+          double nsize = Math.min(25,Math.round(0.0015 * scale));
           g.drawOval((int)(converter.lonToViewX(link.from.lon)-nsize/2), (int)(converter.latToViewY(link.from.lat)-nsize/2), (int)(nsize), (int)(nsize));
           g.setStroke(linkStroke);
         } else {
@@ -220,7 +220,7 @@ public class NodeLayer implements VisorLayer, DataSourceListener {
           g.setColor(new Color(1.0f-avail, avail, 0.5f, currentalpha/255.0f));
         }
       }
-      double nsize = Math.max(1,Math.min(15,Math.round(0.0003 * scale)));
+      double nsize = Math.max(1,Math.min(8,Math.round(0.0003 * scale)));
       double nx = converter.lonToViewX(node.lon) - nsize/2,
              ny = converter.latToViewY(node.lat) - nsize/2;
              
@@ -249,7 +249,7 @@ public class NodeLayer implements VisorLayer, DataSourceListener {
 
         //draw selected node
         if (selectedNode != null) {
-    	  double nsize = Math.min(30,Math.round(0.0006 * scale));
+    	  double nsize = Math.min(15,Math.round(0.0006 * scale));
     	  nx = converter.lonToViewX(selectedNode.lon);
           ny = converter.latToViewY(selectedNode.lat);
     	  g.draw(new Ellipse2D.Double(nx - nsize/2, ny - nsize/2, nsize, nsize));
@@ -294,7 +294,7 @@ public class NodeLayer implements VisorLayer, DataSourceListener {
 	      infos.add("max. links: " + info.maxLinks );
 
 	      if (info.linkCountChart != null) {
-		  info.linkCountChart.draw(g, new Rectangle2D.Float(20, 80, 250, 150));
+		  info.linkCountChart.draw(g, new Rectangle2D.Float(20, 180, 500, 300));
 	      }
             } else if (info.status == info.STATUS_FETCHING) {
               infos.add("retrieving information");
@@ -310,7 +310,7 @@ public class NodeLayer implements VisorLayer, DataSourceListener {
           if (info != null) {
             if (info.status==info.STATUS_AVAILABLE) { 
 	      if (info.linkChart != null) {
-		  info.linkChart.draw(g, new Rectangle2D.Float(20, 80, 250, 150));
+		  info.linkChart.draw(g, new Rectangle2D.Float(20, 180, 500, 300));
 	      }
             } else if (info.status == info.STATUS_FETCHING) {
               infos.add("retrieving information");

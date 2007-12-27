@@ -3,19 +3,25 @@
 version: svn
 subversion: 60
 
-background: 
-  type: openstreetmap
-  # use blank, images or openstreetmap
-  delay: 2500
-  filter: dark
-  cachedir: ./gfx/cache
+backgrounds:
+  openstreetmap: 
+    type: openstreetmap
+    # use blank, images or openstreetmap
+    delay: 2500
+    filter: dark
+    cachedir: ./gfx/cache
 
-  #type: images
+  #image-example:
+  #  type: images
   #  images:
-  #   - gfx:   gfx/cbase.png  # background image
-  #     lat:   52.520869  # latitude of center of image
-  #     lon:   13.409457  # longitude of center of image
-  #     scale: 40000  # scale - you need to experiment here
+  #   - gfx:   gfx/cbase.png  
+  #     # background image
+  #     lat:   52.520869  
+  #     # latitude of center of image
+  #     lon:   13.409457  
+  #     # longitude of center of image
+  #     scale: 40000  
+  #     # scale - you need to experiment here, larger values mean smaller size
 
 datasources:
   freifunk-map:
