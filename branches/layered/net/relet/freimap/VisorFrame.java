@@ -403,11 +403,13 @@ public class VisorFrame extends JPanel implements ComponentListener, MouseListen
     crtTime=time;
   }
 
-  int mrefx, mrefy, mouseMode;
+  int mrefx, mrefy, mouseMode, refPosition;
+
   public void mousePressed(MouseEvent e) {
     mrefx = e.getX();
     mrefy = e.getY();
     mouseMode = e.getButton();
+    refPosition = (mrefy-60) / 20;
   }
 
   public void mouseDragged(MouseEvent e) {
@@ -415,6 +417,8 @@ public class VisorFrame extends JPanel implements ComponentListener, MouseListen
     mousey = e.getY();
     if ((mousey>h-100)&&(mousex >= timelinex0)&&(mousex <= timelinex1)) {
       setCurrentTime(mousex-timelinex0);
+    } else if ((mousex>20) && (mousex<150)&& (mousey>60) && (mousey<60+layers.size()*20)) {
+      //int targPosition = (mousey-60) / 20;
     } else {
       switch(mouseMode) {
         case MouseEvent.BUTTON1:
@@ -449,7 +453,21 @@ public class VisorFrame extends JPanel implements ComponentListener, MouseListen
   }
   public void mouseEntered(MouseEvent e) {}
   public void mouseExited(MouseEvent e) {}
-  public void mouseReleased(MouseEvent e) {}
+  public void mouseReleased(MouseEvent e) {
+    if ((mousex>20) && (mousex<150)&& (mousey>60) && (mousey<60+layers.size()*20)) {
+      int targPosition = (mousey-60) / 20;
+      VisorLayer ref = layers.elementAt(refPosition),
+		 swap = layers.elementAt(targPosition);
+      String     refID = layerids.elementAt(refPosition),
+		 swapID = layerids.elementAt(targPosition);
+      System.err.println("moving "+refPosition+"("+ref+") to "+targPosition+"("+swap+")");
+      layers.setElementAt(ref, targPosition);
+      layerids.setElementAt(refID, targPosition);
+      layers.setElementAt(swap, refPosition);
+      layerids.setElementAt(swapID, refPosition);
+      System.err.println("now we have: "+refPosition+"("+layers.elementAt(refPosition)+") to "+targPosition+"("+layers.elementAt(targPosition)+")");
+    }
+  }
 
   public void nextFrame() {
     if (playing) crtTime += 1;
