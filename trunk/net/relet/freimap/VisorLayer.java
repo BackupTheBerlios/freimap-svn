@@ -25,6 +25,9 @@ package net.relet.freimap;
 import java.awt.Graphics2D;
 
 public interface VisorLayer {
+  public static final int VISIBILITY_NOT  = 0;
+  public static final int VISIBILITY_FULL = 1;
+  public static final int VISIBILITY_DIM  = 2;
 
   /**
    * Paints the layer.
@@ -46,6 +49,14 @@ public interface VisorLayer {
    */
 
   public void setTransparent(boolean t);
+
+  /**
+   * returns the DataSource of this layer. If the layer is just decorative, returns null.
+   * 
+   * @return null or DataSource
+   */
+
+  public DataSource getSource();
 
  /**
    * Sets the scaling converter for this background.
@@ -76,4 +87,21 @@ public interface VisorLayer {
   * @param zoom
   */
  public void setZoom(int zoom);
+
+ /** retrieves selected layer visibility */
+ public int getVisibility();
+ /** toggles visibility between available modes */
+ public void toggleVisibility();
+
+ /**
+  * Sets the current point in time to be displayed
+  * 
+  * @param crtTime, an unix time stamp
+  * @return true, if the layer has to be repainted consequently
+  */
+ public boolean setCurrentTime(long crtTime);
+
+ public void mouseMoved(double lat, double lon);
+ public void mouseClicked(double lat, double lon, int button);
+
 }

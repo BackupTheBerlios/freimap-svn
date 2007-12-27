@@ -30,6 +30,7 @@ import java.net.URL;
 
 import java.security.*;
 import java.util.Formatter;
+import java.util.HashMap;
 
 import javax.imageio.ImageIO;
 import net.relet.freimap.Configurator;
@@ -47,16 +48,16 @@ public class Tile {
   /**
    * Where to cache background tiles, or null if disabled.
    */
-  static String cacheDir = Configurator.get("background.osm.cache.dir");
+  static String cacheDir;  //fixme: if you really use multiple map backgrounds, these shouldn't be static
   /**
    * Background colour filter to be applied
    */
-  static String filter = Configurator.get("background.osm.filter");
+  static String filter;
   final static String FILTER_DARK = "dark";
   /**
    * Amount of time to pass until a tile is actually loaded.
    */
-  final static long LOAD_TIMEOUT = Configurator.getI("background.osm.delay"); 
+   static long LOAD_TIMEOUT; 
    
 
   /**
@@ -75,6 +76,11 @@ public class Tile {
   
   State state;
   
+  public static void init(HashMap<String, Object> config) {
+    cacheDir = Configurator.getS("cachedir", config);
+    filter = Configurator.getS("filter", config);
+    LOAD_TIMEOUT = Configurator.getI("delay", config); 
+  }
 
   public Tile (URL url, int zoom, int x, int y) {
     this.url = url;
@@ -120,14 +126,14 @@ public class Tile {
 	    //else query server
 	    if (bfimage == null) bfimage = ImageIO.read(url);
             //modify colors to match color scheme
-	    if (filter.equals(FILTER_DARK)) image = makeImageBlack(bfimage);
+            if (filter.equals(FILTER_DARK)) image = makeImageBlack(bfimage);
             else image=bfimage;
 	    state = State.LOADED;
             if (cacheDir != null) 
 	      try {
                 ImageIO.write(bfimage, "png", cacheFile);
 	      } catch (Exception ex) {
-                System.err.println(ex.getMessage());
+                //System.err.println(ex.getMessage());
               };
 	  }
 	  catch (IOException _)

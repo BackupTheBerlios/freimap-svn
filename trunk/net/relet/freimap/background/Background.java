@@ -1,10 +1,13 @@
 package net.relet.freimap.background;
 
 import java.awt.Graphics2D;
+import java.util.HashMap;
 
+import net.relet.freimap.Configurator;
 import net.relet.freimap.ColorScheme;
 import net.relet.freimap.Converter;
 import net.relet.freimap.VisorLayer;
+import net.relet.freimap.DataSource;
 
 /**
  * A <code>Background</code> instance is responsible for painting
@@ -25,6 +28,7 @@ import net.relet.freimap.VisorLayer;
 public abstract class Background implements VisorLayer {
 
 	protected int zoom, width, height;
+  protected int visible = VISIBILITY_FULL;
 	
 	protected Converter converter;
 	
@@ -55,6 +59,22 @@ public abstract class Background implements VisorLayer {
 		width = w;
 		height = h;
 	}
+
+  public void toggleVisibility() {
+    visible = (visible + 1) % 2;
+  }
+  public int getVisibility() {
+    return visible;
+  }
+
+  /**
+   * returns null
+   * 
+   * @return null
+   */
+  public DataSource getSource() { return null; }
+
+  public boolean setCurrentTime(long crtTime) { return false; }
 
 	/**
 	 * Sets the <code>Background</code>s zoom.
@@ -142,8 +162,8 @@ public abstract class Background implements VisorLayer {
 	 * 
 	 * @return
 	 */
-	public static Background createOpenStreetMapBackground() {
-		return new OpenStreetMapBackground();
+	public static Background createOpenStreetMapBackground(HashMap<String, Object> config) {
+		return new OpenStreetMapBackground(config);
 	}
 	
 	/**
@@ -151,9 +171,9 @@ public abstract class Background implements VisorLayer {
 	 * 
 	 * @return
 	 */
-	public static Background createImagesBackground()
+	public static Background createImagesBackground(HashMap<String, Object> config)
 	{
-		return new ImagesBackground();
+		return new ImagesBackground(config);
 	}
 
 	/**
@@ -167,7 +187,8 @@ public abstract class Background implements VisorLayer {
 	 * @param type
 	 * @return
 	 */
-	public static Background createBackground(String type) {
+	public static Background createBackground(HashMap<String, Object> config) {
+    String type = Configurator.getS("type", config);
 		if (type == null) {
 			System.err.println("warning: no background specified. Defaulting to blank.");
 			return createBlankBackground();
@@ -177,14 +198,18 @@ public abstract class Background implements VisorLayer {
 			return createBlankBackground();
 
 		if (type.equalsIgnoreCase("images"))
-			return createImagesBackground();
+			return createImagesBackground(config);
 
 		if (type.equalsIgnoreCase("openstreetmap"))
-			return createOpenStreetMapBackground();
+			return createOpenStreetMapBackground(config);
 
 		System.err.println("warning: no valid background specified (" + type
 				+ "). Defaulting to blank.");
 		return createBlankBackground();
 	}
+ 
+ //these two are ignored.
+ public void mouseMoved(double lat, double lon) {}
+ public void mouseClicked(double lat, double lon, int button) {}
 
 }

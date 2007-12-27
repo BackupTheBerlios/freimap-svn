@@ -23,75 +23,117 @@
 package net.relet.freimap;
 
 import java.io.*;
-import java.util.Hashtable;
+import java.util.*;
+
+import org.ho.yaml.*;
+
 
 public class Configurator {
+  private static HashMap<String, Object> config;
+
   public static final String[] CONFIG_LOCATIONS = new String[]{ 
-    "./freimap.cfg",
+    "./config.yaml",
+//    "./freimap.cfg",
     "./.freimaprc",
     "/etc/freimap.cfg",
     "~/.freimaprc"
   };
 
-  private static final String[][] CONFIG_DEFAULTS = new String[][]{
-    {"DataSource", "net.relet.freimap.FreifunkMapDataSource", "# net.relet.freimap.{FreifunkMap|OLSRD|Mysql}DataSource"},
-    {"#DataSource", "net.relet.freimap.OLSRDDataSource", ""},
-    {"#DataSource", "net.relet.freimap.MysqlDataSource", ""},
-    {"background", "blank", "# Use blank, images or openstreetmap" },
-    {"background.osm.delay", "2500", "# wait this number of milliseconds before fetching background tiles"}, 
-    {"#background.osm.filter", "dark", "# apply a colour filter to openstreetmap tiles (use 'dark' or 'none')"}, 
-    {"#background.osm.tileserver", "mapnik", "# OpenStreetMap map server: 'mapnik' (default), 'osmarender' or URL"}, 
-    {"#background.osm.cache.dir", "./cache", "# if given, background map tiles will be cached here. CAUTION! caching will eat your disk space. Make sure the directory exists." },
-    {"ffmds.url", "file:data/sample-map-berlin-20070519.xml", "# Sample data"},
-    {"#ffmds.url", "http://map.olsrexperiment.de/freifunkmap.php?getArea=52.6351465262243,13.718490600585938,52.39278242102423,13.1011962890625&z=19", ""},
-    {"yaml.url", "http://ffsomething.somewhere.tld", "# url of the ffsomething yaml server"},
-    {"olsrd.host", "localhost", "# hostname"},
-    {"olsrd.port", "2004", "# port"},
-    {"#olsrd.nodefile", "data/nodes.dump", "# keep the default value unless you know what you're doing"},
-    {"olsrd.nodesource", "FreifunkMapDataSource", "# or MysqlDataSource"},
-    {"mysql.host", "localhost", "# hostname"},
-    {"mysql.user", "root", "# mysql username"},
-    {"mysql.pass", " ", "# mysql password"},
-    {"mysql.db", "freifunk", "# database name"},
-    {"mysql.tables.nodes", "nodes_interpolated", "# table name for node positions"},
-    {"mysql.tables.links", "links", "# table name for link data"},
-    {"image.count", "1", "# background image count"},
-    {"image.1.gfx", "gfx/cbase.png", "# background image"},
-    {"image.1.lat", "52.520869", "# latitude of center of image"},
-    {"image.1.lon", "13.409457", "# longitude of center of image"},
-    {"image.1.scale", "40000", "# scale - you need to experiment here"},
-  };
-  public static Hashtable<String,String> config=new Hashtable<String,String>();
+  public void initDefaultConfig() {
+    config = new HashMap<String, Object>();
+    config.put("version" , "svn");
+    config.put("subversion", new Integer(60));
+    HashMap<String, Object> background = new HashMap<String, Object>();
+    background.put("type", "blank");
+    config.put("background", background);
+    HashMap<String, Object> datasources = new HashMap<String, Object>();
+    HashMap<String, Object> source = new HashMap<String, Object>();
+    source.put("class", "net.relet.freimap.OLSRDDataSource");
+    source.put("host", "localhost");
+    source.put("port", new Integer(2004));
+    source.put("nodesource", "freifunk-map");
+    datasources.put("dotplugin-localhost", source);
+    source = new HashMap<String, Object>();
+    source.put("class", "net.relet.freimap.FreifunkMapDataSource");
+    source.put("url", "file:data/ffmap.xml");
+    datasources.put("freifunk-map",source);
+    config.put("datasources",datasources);
+  }
 
   public Configurator() {
-    readDefaultConfig();
+    initDefaultConfig();
     parseConfigFile();
   }
 
-  public static String get(String key) {
-    return config.get(key);
+  public static Object get(String key) {
+    return get(key, null);
   }
-  public static int getI(String key) {
-    try {
-      return Integer.parseInt(config.get(key)); 
-    } catch (Exception ex) {
-      return -1;
+  public static Object get(String key, HashMap<String, Object> parent) {
+    return get(new String[]{key}, parent);
+  }
+  public static Object get(String[] keys) {
+    return get(keys, null);
+  }
+  @SuppressWarnings("unchecked")
+  public static Object get(String[] keys, HashMap<String, Object> parent) {
+    if (parent==null) parent = config;
+    Object value = parent;
+    for (int i=0; i<keys.length; i++) {
+      try {
+        parent = (HashMap<String, Object>)value;
+      } catch (Exception ex) {
+        return null;
+      }
+      value = parent.get(keys[i]);
     }
+    return value;
+  }
+  public static int getI(String[] keys) {
+    return getI(keys, null);
+  }
+  public static int getI(String key, HashMap<String, Object> parent) {
+    return getI(new String[]{key}, parent);
+  }
+  public static int getI(String[] keys, HashMap<String, Object> parent) {
+    try {
+      return (Integer)get(keys, parent); 
+    } catch (Exception ex) {
+    }
+    return -1;
   }
   public static double getD(String key) {
+    return getD(key, null);
+  }
+  public static double getD(String key, HashMap<String, Object> parent) {
+    return getD(new String[]{key}, parent);
+  }
+  public static double getD(String[] keys) {
+    return getD(keys, null);
+  }
+  public static double getD(String[] keys, HashMap<String, Object> parent) {
     try {
-      return Double.parseDouble(config.get(key)); 
+      Object o = get(keys, parent);
+      if (o instanceof Double) return ((Double)o).doubleValue();
+      if (o instanceof Integer) return ((Integer)o).doubleValue();
     } catch (Exception ex) {
-      return Double.NaN;
     }
+    return Double.NaN;
+  }
+  public static String getS(String[] keys) {
+    return getS(keys, null);
+  }
+  public static String getS(String key, HashMap<String, Object> parent) {
+    return getS(new String[]{key}, parent);
+  }
+  public static String getS(String[] keys, HashMap<String, Object> parent) {
+    try {
+      return (String)get(keys, parent); 
+    } catch (Exception ex) {
+    }
+    return null;
   }
 
-  void readDefaultConfig() {
-    for (int i=0; i<CONFIG_DEFAULTS.length; i++) {
-      config.put(CONFIG_DEFAULTS[i][0], CONFIG_DEFAULTS[i][1]);
-    }
-  }
-
+  @SuppressWarnings("unchecked")
   void parseConfigFile() {
     File found=null;
     for (int i=0;i<CONFIG_LOCATIONS.length;i++) {
@@ -100,19 +142,16 @@ public class Configurator {
       found=f;
     }
     if (found==null) {
-      System.out.println("Could not find configuration file freimap.cfg or .freimaprc, attempting to create a file with default values");
+      System.out.println("Could not find a configuration file, attempting to create file config.yaml with default values");
       File f=null;
       try {
         f=new File(CONFIG_LOCATIONS[0]);
-        PrintWriter out=new PrintWriter(new FileWriter(f));
-        for (int i=0; i<CONFIG_DEFAULTS.length; i++) {
-          out.println(CONFIG_DEFAULTS[i][0]+"\t = "+CONFIG_DEFAULTS[i][1]+"\t"+CONFIG_DEFAULTS[i][2]);
-        }
-        out.close();
+        Yaml.dump(config, f, true);
         System.out.println("Please have a look at "+f.getName()+". Then re-run this program.");
         System.exit(0);
       } catch (IOException ex) {
-        System.out.println("Failed to create configuration file "+f.getName()+". "+ex.getMessage()+"\nUsing default configuration anyway.");
+        System.out.println("Failed to create configuration file "+f.getName()+". "+ex.getMessage());
+        System.exit(1);
       } catch (Exception ex2) {
         ex2.printStackTrace();
       }
@@ -120,28 +159,10 @@ public class Configurator {
 
     if (found!=null) {
       try {
-        BufferedReader in=new BufferedReader(new FileReader(found));
-        int n=0, pos;
-        while (true) {
-          String line=in.readLine();
-          n++;
-          if (line==null) break;
-          if ((line.length()==0)||(line.charAt(0)=='#')) continue;
- 	  if ((pos = line.indexOf("="))>0) {
-            String key=line.substring(0, pos).trim();
-            String value=line.substring(pos+1);
-            if (value.indexOf("\t#")>0) value=value.substring(0,value.indexOf("\t#"));
-            value=value.trim();
-            /* if (config.get(key)==null) {
-              System.out.println("Warning: Possibly ignoring unknown configuration key "+key);
-            } */
-            config.put(key, value);
-          } else {
-            System.out.println("Ignoring malformed configuration line "+n+".");
-          }
-        }
+        config = (HashMap<String, Object>)Yaml.load(found);
       } catch (Exception ex) {
-        ex.printStackTrace();
+        System.out.println("Failed to load configuration file "+found.getName()+". "+ex.getMessage());
+        System.exit(1);
       }
     }
   }

@@ -26,9 +26,6 @@ import java.util.*;
 import java.sql.*;
 
 public class MysqlDataSource implements DataSource {
-  private final static String TABLE_LINKS = Configurator.get("mysql.tables.links");
-  private final static String TABLE_NODES = Configurator.get("mysql.tables.nodes");
-  //private final static String TABLE_LINKS = "links_hourly";
   
   private Vector<FreiNode> nodeList=new Vector<FreiNode>();
   private Hashtable<String, FreiNode> nodeByName=new Hashtable<String, FreiNode>(); //fixme: not effective
@@ -38,17 +35,35 @@ public class MysqlDataSource implements DataSource {
   private Hashtable<String, Float> availmap = null;
   private Connection conn, conn2, conn3;
   private long firstUpdateTime = 1,
-               lastUpdateTime = 1;
+               lastUpdateTime = 1,
+               firstAvailableTime = 1,
+               lastAvailableTime = 1;
   private DataSourceListener listener=null;
+
+  private String host, user, pass, db;
+  private String TABLE_LINKS;
+  private String TABLE_NODES;
+  private boolean nodeDataOnly = false;
   
   public MysqlDataSource() {
     this(null, null, null, null, false);
   }
   public MysqlDataSource(String host, String user, String pass, String db, boolean nodeDataOnly) {
-    if (host==null) host=Configurator.get("mysql.host");
-    if (pass==null) pass=Configurator.get("mysql.pass");
-    if (user==null) user=Configurator.get("mysql.user");
-    if (db  ==null) db  =Configurator.get("mysql.db");
+    this.host=host;
+    this.user=user;
+    this.pass=pass;
+    this.db  =db;
+    this.nodeDataOnly = nodeDataOnly;
+  }
+
+  public void init(HashMap<String, Object> conf) {
+    if (host==null) host=Configurator.getS("host", conf);
+    if (pass==null) pass=Configurator.getS("pass", conf);
+    if (user==null) user=Configurator.getS("user", conf);
+    if (db  ==null) db  =Configurator.getS("db", conf);
+
+    TABLE_LINKS = Configurator.getS(new String[]{"tables", "links"}, conf);
+    TABLE_NODES = Configurator.getS(new String[]{"tables", "nodes"}, conf);
     //todo: dummy check input
     try {
       String odbcurl="jdbc:mysql://"+host+"/"+db;
@@ -112,16 +127,30 @@ public class MysqlDataSource implements DataSource {
   }
 
   public long getLastUpdateTime() {
+    long newLastUpdateTime=-1;
     try {
       Statement s = conn.createStatement();
       ResultSet r = s.executeQuery("SELECT unix_timestamp(max(clock)) as last from "+TABLE_LINKS+" WHERE clock>from_unixtime("+lastUpdateTime+")");
       if (r.next()) {
-        lastUpdateTime = r.getLong("last");
+        newLastUpdateTime = r.getLong("last");
       }
     } catch (Exception ex) {
       ex.printStackTrace();
     }
+    if (newLastUpdateTime > lastUpdateTime) lastUpdateTime = newLastUpdateTime;
     return lastUpdateTime;
+  }
+
+  public long getLastAvailableTime() {
+    return lastAvailableTime;
+  }
+  public long getFirstAvailableTime() {
+    return firstAvailableTime;
+  }
+  public void setAvailableTime(long first, long last) {
+    if ((lastAvailableTime == 1) || (last > lastAvailableTime)) lastAvailableTime = last;
+    if ((firstAvailableTime == 1) || (first < firstAvailableTime)) firstAvailableTime = first;
+    if (listener!=null) listener.timeRangeAvailable(first, last);
   }
 
   public void addDataSourceListener(DataSourceListener dsl) {
@@ -170,11 +199,14 @@ public class MysqlDataSource implements DataSource {
         ex.printStackTrace();
       }
     }
+    if (firstAvailableTime == 1) firstAvailableTime=firstUpdateTime;
+    if (lastAvailableTime == 1) lastAvailableTime=firstUpdateTime;
     return firstUpdateTime;
   }
   
   public Vector<FreiLink> getLinks(long time) {
     linkList=new Vector<FreiLink>();
+    if ((time<=0) /* || (time>MAX_UNIX_TIME)*/ ) return linkList; //empty
     try {
       Statement s = conn.createStatement();
       ResultSet r = s.executeQuery("SELECT HIGH_PRIORITY * from "+TABLE_LINKS+" where clock=from_unixtime("+time+")");
@@ -202,6 +234,7 @@ public class MysqlDataSource implements DataSource {
         }
       }
     } catch (Exception ex) {
+      System.out.println("clock = "+time);
       ex.printStackTrace();
     }
     return linkList;
@@ -294,7 +327,7 @@ public class MysqlDataSource implements DataSource {
             Thread.yield();
           }
           if (!hasResults) break;
-          if (listener!=null) listener.timeRangeAvailable(firstUpdateTime, stamp);
+          setAvailableTime(firstUpdateTime, stamp);
           //System.out.println("fetched "+firstUpdateTime+" - "+stamp);
           offset+=OFFSET;
           Thread.sleep(SLEEP);

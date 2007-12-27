@@ -25,33 +25,57 @@ package net.relet.freimap;
 import java.awt.*;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
-
+import java.util.*;
 import javax.swing.*;
 
 import net.relet.freimap.background.Background;
 
 public class Visor extends JFrame implements WindowListener {
   public static Configurator config;
+  public static HashMap<String, DataSource> sources;
+  public static HashMap<String, Background> backgrounds;
 
+  @SuppressWarnings("unchecked")
   public static void main(String[] args) {
     config=new Configurator();
     
-    DataSource source = null;
+    sources = new HashMap<String, DataSource>();
     try {
-      Class<DataSource> csource=(Class<DataSource>)Class.forName(config.get("DataSource")); //this cast cannot be checked!
-      source = csource.newInstance();
+      HashMap<String, Object> ds = (HashMap<String, Object>)config.get("datasources");
+      Iterator<String> i = ds.keySet().iterator();
+      while (i.hasNext()) {
+        String id   = i.next();
+        HashMap<String, Object> subconfig = (HashMap<String, Object>) ds.get(id);
+        String claz = config.getS("class", subconfig);
+        Class<DataSource> csource=(Class<DataSource>)Class.forName(claz); //this cast cannot be checked!
+        DataSource source = csource.newInstance();
+        source.init(subconfig); //initialize datasource with configuration parameters
+        sources.put(id, source);
+      }
     } catch (Exception ex) {
       ex.printStackTrace();
       return;
     }
-    
-    Background bg = Background.createBackground(Configurator.get("background"));
-    
-    new Visor(source, bg);
+
+    backgrounds = new HashMap<String, Background>();
+    try {
+      HashMap<String, Object> bgs = (HashMap<String, Object>)config.get("backgrounds");
+      Iterator<String> i = bgs.keySet().iterator();
+      while (i.hasNext()) {
+        String id   = i.next();
+        HashMap<String, Object> subconfig = (HashMap<String, Object>) bgs.get(id);
+        Background newbg = Background.createBackground(subconfig);
+        backgrounds.put(id, newbg);
+      }
+    } catch (Exception ex) {
+      ex.printStackTrace();
+      return;
+    }
+   
+    new Visor();
   }
   
   VisorFrame viz;
-  DataSource source;
 
   JMenuBar  bar = new JMenuBar();
   JMenu     m_source  = new JMenu("Source");
@@ -62,11 +86,10 @@ public class Visor extends JFrame implements WindowListener {
   JMenu     m_help    = new JMenu("Help");
   JMenuItem mi_about  = new JMenu("About");
   
-  public Visor(DataSource source, Background background) {
+  public Visor() {
     super("http://freimap.berlios.de");
-    this.source=source;
     
-    initLayout(source, background);
+    initLayout();
 
     try {
       while (true) {
@@ -78,10 +101,18 @@ public class Visor extends JFrame implements WindowListener {
     }
   }  
   
-  void initLayout(DataSource source, Background background) {
-    viz=new VisorFrame(source);
-    //viz.addLayer(new DataSourceLayer(source));
-    viz.addLayer(background);
+  void initLayout() {
+    viz=new VisorFrame();
+    Iterator<String> i = backgrounds.keySet().iterator();
+      while (i.hasNext()) {
+      String id = i.next();
+      viz.addLayer(id, backgrounds.get(id), true);
+    }
+    i = sources.keySet().iterator();
+      while (i.hasNext()) {
+      String id = i.next();
+      viz.addLayer(id, new NodeLayer(sources.get(id)), true);
+    }
     Container c = this.getContentPane();
     
     m_source.add(mi_open);
