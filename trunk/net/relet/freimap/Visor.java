@@ -59,13 +59,16 @@ public class Visor extends JFrame implements WindowListener {
 
     backgrounds = new HashMap<String, Background>();
     try {
-      HashMap<String, Object> bgs = (HashMap<String, Object>)config.get("backgrounds");
-      Iterator<String> i = bgs.keySet().iterator();
-      while (i.hasNext()) {
-        String id   = i.next();
-        HashMap<String, Object> subconfig = (HashMap<String, Object>) bgs.get(id);
-        Background newbg = Background.createBackground(subconfig);
-        backgrounds.put(id, newbg);
+      Object o = config.get("backgrounds");
+      if (o != null) {
+        HashMap<String, Object> bgs = (HashMap<String, Object>)o;
+        Iterator<String> i = bgs.keySet().iterator();
+        while (i.hasNext()) {
+          String id   = i.next();
+          HashMap<String, Object> subconfig = (HashMap<String, Object>) bgs.get(id);
+          Background newbg = Background.createBackground(subconfig);
+          backgrounds.put(id, newbg);
+        }
       }
     } catch (Exception ex) {
       ex.printStackTrace();
