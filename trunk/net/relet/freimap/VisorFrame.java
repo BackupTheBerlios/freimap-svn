@@ -464,6 +464,7 @@ public class VisorFrame extends JPanel implements ComponentListener, MouseListen
   public void mouseExited(MouseEvent e) {}
   public void mouseReleased(MouseEvent e) {
     if ((mousex>20) && (mousex<150)&& (mousey>60) && (mousey<60+layers.size()*20)) {
+      if (refPosition >= layers.size()) return;
       int targPosition = (mousey-60) / 20;
       VisorLayer ref = layers.elementAt(refPosition),
 		 swap = layers.elementAt(targPosition);

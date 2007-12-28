@@ -148,10 +148,14 @@ public class NodeLayer implements VisorLayer, DataSourceListener {
     }
 
     Stroke linkStroke = new BasicStroke((float)(Math.min(2,0.00005 * scale)), BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
+    Stroke linkStrokeThick = new BasicStroke((float)(Math.min(4,0.00010 * scale)), BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
     Stroke cableStroke = new BasicStroke((float)(Math.min(10,0.00015 * scale)), BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
     Stroke selectedStroke = new BasicStroke((float)(Math.min(20,0.00030 * scale)), BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
 
     //draw selected link extra thick
+    if ((selectedLink != null) && ((selectedLink.from.lat == selectedLink.from.DEFAULT_LAT) || (selectedLink.to.lat == selectedLink.to.DEFAULT_LAT))) {
+      selectedLink = null;
+    } 
     if (selectedLink != null) {
       g.setStroke(selectedStroke);
       g.setColor(fgcolor2);
@@ -170,7 +174,8 @@ public class NodeLayer implements VisorLayer, DataSourceListener {
     g.setStroke(linkStroke);
     if ((links != null) && (links.size()>0)) {
       for(int i = 0; i < links.size(); i++) {
-        FreiLink link = (FreiLink)links.elementAt(i);
+        FreiLink link = links.elementAt(i);
+        boolean isneighbourlink = (link.from.equals(selectedNode)||link.to.equals(selectedNode));
         if (link.to.equals(uplink)) {
           g.setColor(activeblue);
           g.setStroke(cableStroke);
@@ -187,11 +192,11 @@ public class NodeLayer implements VisorLayer, DataSourceListener {
             green=1/link.etx;
             g.setColor(new Color(1-green, green, 0.5f, currentalpha/255.0f));
           }
-          if ((link.from.lat != link.from.DEFAULT_LAT) && (link.to.lat != link.to.DEFAULT_LAT)) //ignore links to truly unlocated nodes (at default position)
-            g.drawLine(converter.lonToViewX(link.from.lon),
-        		  converter.latToViewY(link.from.lat),
-        		  converter.lonToViewX(link.to.lon), 
-        		  converter.latToViewY(link.to.lat));
+          if ((link.from.lat != link.from.DEFAULT_LAT) && (link.to.lat != link.to.DEFAULT_LAT)) {//ignore links to truly unlocated nodes (at default position)
+            g.setStroke(linkStroke);
+            if (isneighbourlink) g.setStroke(linkStrokeThick);
+            g.drawLine(converter.lonToViewX(link.from.lon), converter.latToViewY(link.from.lat), converter.lonToViewX(link.to.lon), converter.latToViewY(link.to.lat));
+          }
           if (link.to.unlocated && (link.from.lat != link.from.DEFAULT_LAT)) {
             double netx = (link.etx<1)?0d:1d/link.etx;
             link.to.lonsum+=link.from.lon*netx;

@@ -66,9 +66,20 @@ public class FreiNode implements Comparable, Serializable {
   public int compareTo(Object o) {
     return id.compareTo(((FreiNode)o).id);
   }
+
+  FreiNode eqo;
   public boolean equals(Object o) {
     if (!(o instanceof FreiNode)) return false;
-    return this.id.equals(((FreiNode)o).id);
+    eqo = (FreiNode)o;
+    if (this.id.equals(eqo.id)) return true;
+    if (this.fqid != null) {
+      if (this.fqid.equals(eqo.id)) return true;
+      if (eqo.fqid != null) {
+        if (this.fqid.equals(eqo.fqid)) return true;
+        if (eqo.fqid.equals(this.id)) return true;
+      }
+    }
+    return false;
   }
   public String toString() {
     return fqid;

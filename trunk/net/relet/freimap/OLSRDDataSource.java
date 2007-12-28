@@ -73,6 +73,9 @@ public class OLSRDDataSource implements DataSource {
       for (Enumeration<String> enu = generatedNodes.keys(); enu.hasMoreElements();) {
         nodes.add(generatedNodes.get(enu.nextElement()));
       }
+      for (int i=0;i<nodes.size();i++) { 
+        knownNodes.put(nodes.elementAt(i).id, nodes.elementAt(i));
+      }
       return nodes;
     } else {
       try {
@@ -91,12 +94,13 @@ public class OLSRDDataSource implements DataSource {
   }
 
   public FreiNode getNodeByName(String id) {
-    if (nodeSource!=null) return nodeSource.getNodeByName(id);
-    else { 
-      FreiNode node= knownNodes.get(id);
-      if (node!=null) return node;
-      else return generatedNodes.get(id);
+    if (nodeSource!=null) {
+      FreiNode x = nodeSource.getNodeByName(id);
+      if (x!=null) return x;
     }
+    FreiNode node= knownNodes.get(id);
+    if (node!=null) return node;
+    else return generatedNodes.get(id);
   }
   
   public Hashtable<String, Float> getNodeAvailability(long time) {
@@ -220,9 +224,11 @@ public class OLSRDDataSource implements DataSource {
               } else if ((linkData != null) && (line.length()>0) && (line.charAt(0)=='"')) {
                 StringTokenizer st=new StringTokenizer(line, "\"", false);
                 String from = st.nextToken();
+		//if (from.indexOf("/")>-1) { from = from.substring(0, from.indexOf("/")); }
                 st.nextToken();
                 if (st.hasMoreTokens()) { //otherwise it's a gateway node!
                   String to = st.nextToken();
+   		  //if (to.indexOf("/")>-1) { to = to.substring(0, to.indexOf("/")); }
                   st.nextToken();
                   String setx = st.nextToken();
                   boolean hna = setx.equals("HNA"); 
