@@ -1,4 +1,5 @@
 # freimap configuration file. Please refer to http://www.yaml.org/start.html or http://www.yaml.org/refcard.html for syntax info.
+# this is a working configuration for the 24c3
 --- 
 version: svn
 subversion: 60
@@ -11,22 +12,34 @@ backgrounds:
     filter: dark
     cachedir: ./gfx/cache
 
-  #image-example:
-  #  type: images
-  #  images:
-  #   - gfx:   gfx/cbase.png  
-  #     # background image
-  #     lat:   52.520869  
-  #     # latitude of center of image
-  #     lon:   13.409457  
-  #     # longitude of center of image
-  #     scale: 40000  
-  #     # scale - you need to experiment here, larger values mean smaller size
+  bcc-a:
+    type: images
+    images:
+     - gfx:   gfx/bcc-a-uni.png  
+       lat:   52.52089531804967
+       lon:   13.416420177909853
+       scale: 1500000  
+
+  bcc-b:
+    type: images
+    images:
+     - gfx:   gfx/bcc-b-uni.png 
+       lat:   52.52089531804967
+       lon:   13.416420177909853
+       scale: 1500000  
+
+  bcc-c:
+    type: images
+    images:
+     - gfx:   gfx/bcc-c-uni.png 
+       lat:   52.52089531804967
+       lon:   13.416420177909853
+       scale: 1500000  
 
 datasources:
-  freifunk-map:
+  bcc-coordinates:
     class: net.relet.freimap.FreifunkMapDataSource
-    url: "file:data/ffmap.xml"
+    url: "file:data/bcc.xml"
     # url: "http://map.olsrexperiment.de/freifunkmap.php?getArea=52.6351465262243,13.718490600585938,52.39278242102423,13.1011962890625&z=19"
 
   olsrd-localhost:

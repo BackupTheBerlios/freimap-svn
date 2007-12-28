@@ -142,6 +142,11 @@ public class NodeLayer implements VisorLayer, DataSourceListener {
     g.setFont(VisorFrame.mainfont);
 
     //draw links
+    if (scale < 0) {
+      System.err.println("DEBUG scale < 0");
+      scale = 1;
+    }
+
     Stroke linkStroke = new BasicStroke((float)(Math.min(2,0.00005 * scale)), BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
     Stroke cableStroke = new BasicStroke((float)(Math.min(10,0.00015 * scale)), BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
     Stroke selectedStroke = new BasicStroke((float)(Math.min(20,0.00030 * scale)), BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);

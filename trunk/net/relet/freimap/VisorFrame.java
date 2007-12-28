@@ -373,8 +373,8 @@ public class VisorFrame extends JPanel implements ComponentListener, MouseListen
             break;
           }
           case 2: {
-              zoom=zoom+1; //DEBUG only
-              initZoom(zoom, mousex, mousey);
+              //zoom=zoom+1; //DEBUG only
+              //initZoom(zoom, mousex, mousey);
               System.out.println("Clicked on: "+lat+" "+lon);
 //            centerOn(e.getPoint());
             break;
@@ -403,13 +403,14 @@ public class VisorFrame extends JPanel implements ComponentListener, MouseListen
     crtTime=time;
   }
 
-  int mrefx, mrefy, mouseMode, refPosition;
+  int mrefx, mrefy, mouseMode, refPosition, refZoom;
 
   public void mousePressed(MouseEvent e) {
     mrefx = e.getX();
     mrefy = e.getY();
     mouseMode = e.getButton();
     refPosition = (mrefy-60) / 20;
+    refZoom = zoom;
   }
 
   public void mouseDragged(MouseEvent e) {
@@ -421,7 +422,7 @@ public class VisorFrame extends JPanel implements ComponentListener, MouseListen
       //int targPosition = (mousey-60) / 20;
     } else {
       switch(mouseMode) {
-        case MouseEvent.BUTTON1:
+        case MouseEvent.BUTTON1: {
           converter.setWorldRel(mrefx - mousex, mrefy - mousey);
           //namefinder.setLocation(converter.viewYToLat(cy), converter.viewXToLon(cx), zoom);
           
@@ -431,6 +432,14 @@ public class VisorFrame extends JPanel implements ComponentListener, MouseListen
           repaint();
         	  
           break;
+        }
+        case MouseEvent.BUTTON3: {
+          int steps = (mousey - mrefy) / 20;
+          zoom = Math.min(22, Math.max(0, refZoom + steps));
+   	  initZoom(zoom, mrefx, mrefy);
+	  scale = converter.getScale();
+          repaint();
+       }
       }
     }
   }
@@ -460,12 +469,10 @@ public class VisorFrame extends JPanel implements ComponentListener, MouseListen
 		 swap = layers.elementAt(targPosition);
       String     refID = layerids.elementAt(refPosition),
 		 swapID = layerids.elementAt(targPosition);
-      System.err.println("moving "+refPosition+"("+ref+") to "+targPosition+"("+swap+")");
       layers.setElementAt(ref, targPosition);
       layerids.setElementAt(refID, targPosition);
       layers.setElementAt(swap, refPosition);
       layerids.setElementAt(swapID, refPosition);
-      System.err.println("now we have: "+refPosition+"("+layers.elementAt(refPosition)+") to "+targPosition+"("+layers.elementAt(targPosition)+")");
     }
   }
 
