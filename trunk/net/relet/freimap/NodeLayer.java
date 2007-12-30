@@ -325,10 +325,12 @@ public class NodeLayer implements VisorLayer, DataSourceListener {
 
           label = "Link: "+selectedLink.toString();
 
-          Iterator<String> atts=selectedLink.attributes.keySet().iterator();
-          while (atts.hasNext()) {
-            String key = atts.next();
-            infos.add(key+": "+selectedLink.attributes.get(key));
+          if (selectedLink.attributes != null) {
+            Iterator<String> atts=selectedLink.attributes.keySet().iterator();
+            while (atts.hasNext()) {
+              String key = atts.next();
+              infos.add(key+": "+selectedLink.attributes.get(key));
+            }
           }
 
           LinkInfo info = linkinfo.get(selectedLink);

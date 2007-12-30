@@ -45,8 +45,8 @@ public class FreiNode implements Comparable, Serializable {
   public FreiNode(String id, String fqid) {
     this.id=id;
     this.fqid=fqid;
-    this.lat = DEFAULT_LAT + 0.01 * Math.random(); //when no coordinates are known, place at default position to allow interpolation
-    this.lon = DEFAULT_LON + 0.01 * Math.random();
+    this.lat = DEFAULT_LAT; //when no coordinates are known, place at default position to allow interpolation
+    this.lon = DEFAULT_LON;
     this.unlocated=true; 
   }
   public FreiNode(String id, double lon, double lat) {
