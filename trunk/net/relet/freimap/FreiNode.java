@@ -35,7 +35,7 @@ public class FreiNode implements Comparable, Serializable {
   public double lonsum=0, latsum=0; //used only for real time interpolation
   public double nc=0;
   public boolean unlocated=false;
-  public HashMap<String, Object> attributes;
+  public HashMap<String, Object> attributes = new HashMap<String, Object>();
   
   public FreiNode() {} //serializable
 
@@ -45,8 +45,8 @@ public class FreiNode implements Comparable, Serializable {
   public FreiNode(String id, String fqid) {
     this.id=id;
     this.fqid=fqid;
-    this.lat = DEFAULT_LAT; //when no coordinates are known, place at default position to allow interpolation
-    this.lon = DEFAULT_LON;
+    this.lat = DEFAULT_LAT + 0.01 * Math.random(); //when no coordinates are known, place at default position to allow interpolation
+    this.lon = DEFAULT_LON + 0.01 * Math.random();
     this.unlocated=true; 
   }
   public FreiNode(String id, double lon, double lat) {
@@ -72,13 +72,13 @@ public class FreiNode implements Comparable, Serializable {
     if (!(o instanceof FreiNode)) return false;
     eqo = (FreiNode)o;
     if (this.id.equals(eqo.id)) return true;
-    if (this.fqid != null) {
+    /*if (this.fqid != null) {
       if (this.fqid.equals(eqo.id)) return true;
       if (eqo.fqid != null) {
         if (this.fqid.equals(eqo.fqid)) return true;
         if (eqo.fqid.equals(this.id)) return true;
       }
-    }
+    }*/
     return false;
   }
   public String toString() {

@@ -236,20 +236,14 @@ public class OLSRDDataSource implements DataSource {
                   FreiNode nfrom = getNodeByName(from),
                            nto   = getNodeByName(to);
                   if (nfrom == null) {
-                            nfrom = generatedNodes.get(from);
-                            if (nfrom==null) {
-                              nfrom = new FreiNode(from);
-                              generatedNodes.put(from, nfrom);
-                              if (listener!=null) listener.nodeListUpdate(nfrom);
-                            }
+                            nfrom = new FreiNode(from);
+                            generatedNodes.put(from, nfrom);
+                            if (listener!=null) listener.nodeListUpdate(nfrom);
                   }
                   if (nto   == null) {
-                            nto = generatedNodes.get(to);
-                            if (nto==null) {
-                              nto = new FreiNode(to);
-                              generatedNodes.put(to, nto);
-                              if (listener!=null) listener.nodeListUpdate(nto);
-                            }
+                            nto = new FreiNode(to);
+                            generatedNodes.put(to, nto);
+                            if (listener!=null) listener.nodeListUpdate(nto);
                   }
                   linkData.add(new FreiLink(nfrom, nto, etx, hna));
                 }

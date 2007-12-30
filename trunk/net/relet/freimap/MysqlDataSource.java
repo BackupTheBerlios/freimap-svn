@@ -85,10 +85,13 @@ public class MysqlDataSource implements DataSource {
   private void updateNodeList() throws SQLException{
     Statement s = conn.createStatement();
     ResultSet r = s.executeQuery("SELECT * from "+TABLE_NODES);
-    //ResultSet r = s.executeQuery("SELECT * from nodes");
+    String ip = null;
     while (r.next()) {
-      String ip = r.getString("node");
-      //String ip = r.getString("ip");
+      try {
+        ip = r.getString("node");
+      } catch (Exception ex) {
+        ip = r.getString("ip");
+      }
       double lon = r.getDouble("lon"),
              lat = r.getDouble("lat");
       FreiNode node=new FreiNode(ip, lon, lat);

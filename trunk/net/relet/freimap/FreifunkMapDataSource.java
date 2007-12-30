@@ -80,6 +80,7 @@ public class FreifunkMapDataSource implements DataSource {
 			String coords = getValue(attr.getNamedItem("coords"));
       String tooltip = getValue(attr.getNamedItem("tooltip"));
       String ip = getValue(attr.getNamedItem("ip"));
+      String height = getValue(attr.getNamedItem("height"));
 
       // Skips old geo data for now.
       if (klass != null && klass.equals("old"))
@@ -105,14 +106,16 @@ public class FreifunkMapDataSource implements DataSource {
         while (stip.hasMoreTokens()) {
           String oneip=stip.nextToken();
           FreiNode nnode = new FreiNode(oneip, tooltip, Double.parseDouble(splitCoords[1]), Double.parseDouble(splitCoords[0]));
+          if (height!=null) nnode.attributes.put("height", new Integer(Integer.parseInt(height)));
           nodes.add(nnode);
         }
         continue;
       } 
       FreiNode nnode = new FreiNode(ip, tooltip, Double.parseDouble(splitCoords[1]), Double.parseDouble(splitCoords[0]));
-		  nodes.add(nnode);
-		}
-	}
+      if (height!=null) nnode.attributes.put("height", new Integer(Integer.parseInt(height)));
+      nodes.add(nnode);
+    }
+  }
 
 	public void addDataSourceListener(DataSourceListener dsl) {
 		// TODO: Implement me.

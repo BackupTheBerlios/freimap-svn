@@ -22,10 +22,14 @@
 
 package net.relet.freimap;
 
+import java.util.HashMap;
+
 public class FreiLink {
   public FreiNode from, to;
   public float etx=-1, lq=-1, nlq=-1;
   public boolean HNA=false;
+  public HashMap<String, Object> attributes;
+
   public FreiLink(FreiNode from, FreiNode to, float lq, float nlq, boolean HNA) {
     this.from = from;
     this.to = to;

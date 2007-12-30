@@ -39,29 +39,7 @@ public class Configurator {
     "~/.freimaprc"
   };
 
-  public void initDefaultConfig() {
-    config = new HashMap<String, Object>();
-    config.put("version" , "svn");
-    config.put("subversion", new Integer(60));
-    HashMap<String, Object> background = new HashMap<String, Object>();
-    background.put("type", "blank");
-    config.put("background", background);
-    HashMap<String, Object> datasources = new HashMap<String, Object>();
-    HashMap<String, Object> source = new HashMap<String, Object>();
-    source.put("class", "net.relet.freimap.OLSRDDataSource");
-    source.put("host", "localhost");
-    source.put("port", new Integer(2004));
-    source.put("nodesource", "freifunk-map");
-    datasources.put("dotplugin-localhost", source);
-    source = new HashMap<String, Object>();
-    source.put("class", "net.relet.freimap.FreifunkMapDataSource");
-    source.put("url", "file:data/ffmap.xml");
-    datasources.put("freifunk-map",source);
-    config.put("datasources",datasources);
-  }
-
   public Configurator() {
-    initDefaultConfig();
     parseConfigFile();
   }
 
@@ -142,19 +120,9 @@ public class Configurator {
       found=f;
     }
     if (found==null) {
-      System.out.println("Could not find a configuration file, attempting to create file config.yaml with default values");
-      File f=null;
-      try {
-        f=new File(CONFIG_LOCATIONS[0]);
-        Yaml.dump(config, f, true);
-        System.out.println("Please have a look at "+f.getName()+". Then re-run this program.");
-        System.exit(0);
-      } catch (IOException ex) {
-        System.out.println("Failed to create configuration file "+f.getName()+". "+ex.getMessage());
-        System.exit(1);
-      } catch (Exception ex2) {
-        ex2.printStackTrace();
-      }
+      System.out.println("Could not find a configuration file, please copy config.yaml.example");
+      System.out.println("to config.yaml and edit to taste.");
+      System.exit(1);
     }
 
     if (found!=null) {

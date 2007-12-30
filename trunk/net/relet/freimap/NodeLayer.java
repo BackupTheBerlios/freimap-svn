@@ -44,6 +44,7 @@ import java.util.Date;
 import java.util.Hashtable;
 import java.util.Locale;
 import java.util.Vector;
+import java.util.Iterator;
 
 import javax.swing.border.LineBorder;
 
@@ -297,6 +298,12 @@ public class NodeLayer implements VisorLayer, DataSourceListener {
 	  String savail=(favail==null)?"N/A":Math.round(favail.floatValue()*100)+"%";
 	  infos.add ("Availability: "+savail);
 
+          Iterator<String> atts=selectedNode.attributes.keySet().iterator();
+          while (atts.hasNext()) {
+            String key = atts.next();
+            infos.add(key+": "+selectedNode.attributes.get(key));
+          }
+
 	  NodeInfo info = nodeinfo.get(selectedNode.id);
           if (info!=null) {
 	    if (info.status == info.STATUS_AVAILABLE) {
@@ -312,11 +319,20 @@ public class NodeLayer implements VisorLayer, DataSourceListener {
 	  } else {
 	    infos.add("+ right click for more +");
 	  }
+
         } else {
           boxw = g.getFontMetrics(VisorFrame.mainfont).stringWidth("Link: 999.999.999.999 -> 999.999.999.999/999.999.999.999");
 
           label = "Link: "+selectedLink.toString();
+
+          Iterator<String> atts=selectedLink.attributes.keySet().iterator();
+          while (atts.hasNext()) {
+            String key = atts.next();
+            infos.add(key+": "+selectedLink.attributes.get(key));
+          }
+
           LinkInfo info = linkinfo.get(selectedLink);
+          
           if (info != null) {
             if (info.status==info.STATUS_AVAILABLE) { 
 	      if (info.linkChart != null) {
@@ -328,6 +344,7 @@ public class NodeLayer implements VisorLayer, DataSourceListener {
 	  } else {
 	    infos.add("+ right click for more +");
 	  }
+
         }
 
         // Put box at fixed location.
