@@ -48,10 +48,14 @@ You're done.
 
 * Follow the instructions at http://developer.berlios.de/svn/?group_id=8309 to obtain an up-to date source tree.
  > ./compile
+or, if you have ant installed:
+ > ant  
 
 == Running freimap ==
 
 By now, you should have the file freimap*.jar and a lib subfolder.
+
+Copy config.yaml.example to config.yaml. Edit to taste. The configuration defaults to read a dot topology on localhost:2004. 
 
  > ./run 
 or 
@@ -60,10 +64,6 @@ or
 If you have got less than 500mb free memory, you may want to adjust the 
 -Xmx parameter. Freimap does not necessarily need that much unless you 
 evaluate many months of collected data using the MysqlDataSource. 
-
-If no configuration file is present, freimap will create such a file and 
-abort, so that you can adjust its setting. The configuration file defaults 
-to listening at localhost, port 2004 to any OLSRD dot_draw plugin. 
 
 
 == Using freimap ==
@@ -97,6 +97,9 @@ green c-base logo is located. Any node which could not be located is currently
 placed there - see [[Freimap/Troubleshooting]])
 
 === Configuration options ===
+
+Obsolete. The new YAML syntax differs slightly but significantly.
+I am keeping this here, as the options are basically the same.
 
 ==== DataSource ====
 Set this to either net.relet.freimap.OLSRDDataSource, net.relet.freimap.MysqlDataSource
