@@ -47,6 +47,9 @@ public class FreiLink {
     this.etx=etx;
     this.HNA=HNA;
   }
+  public void addAttribute(String key, Object value) {
+    attributes.put(key, value);
+  }
   public int hashCode() {
     return from.hashCode() ^ to.hashCode();
   }

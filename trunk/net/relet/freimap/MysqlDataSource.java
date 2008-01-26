@@ -108,6 +108,11 @@ public class MysqlDataSource implements DataSource {
   public FreiNode getNodeByName(String name) {
     return nodeByName.get(name);
   }
+  public void addNode(FreiNode node) {
+    nodeList.remove(node); //just in case
+    nodeList.add(node);
+    nodeByName.put(node.id, node);
+  }
   
   public Hashtable<String, Float> getNodeAvailability(long time) {
     //time is ignored in this implementation
