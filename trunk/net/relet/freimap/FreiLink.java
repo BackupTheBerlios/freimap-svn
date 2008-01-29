@@ -48,8 +48,15 @@ public class FreiLink {
     this.HNA=HNA;
   }
   public void addAttribute(String key, Object value) {
+    if (attributes==null) attributes=new HashMap<String, Object>();
     attributes.put(key, value);
   }
+  public int getI(String key) {
+    if (attributes==null) return 0;
+    Object o=attributes.get(key);
+    return (o==null)?0:((Integer)o).intValue();
+  }
+
   public int hashCode() {
     return from.hashCode() ^ to.hashCode();
   }

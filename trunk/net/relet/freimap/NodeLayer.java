@@ -73,7 +73,9 @@ public class NodeLayer implements VisorLayer, DataSourceListener {
                activeblue = Color.cyan,
                activeyellow = Color.yellow,
                activegreen = Color.green,
-               activewhite = Color.white;
+               activewhite = Color.white,
+               transred =    Color.red,
+               transyellow = Color.yellow;
   public int   currentalpha = 255;
   //ColorScheme cs = ColorScheme.NO_MAP;
 
@@ -176,6 +178,7 @@ public class NodeLayer implements VisorLayer, DataSourceListener {
     if ((links != null) && (links.size()>0)) {
       for(int i = 0; i < links.size(); i++) {
         FreiLink link = links.elementAt(i);
+        float packets=link.getI("packets");
         boolean isneighbourlink = (link.from.equals(selectedNode)||link.to.equals(selectedNode));
         if (link.to.equals(uplink)) {
           g.setColor(activeblue);
@@ -184,14 +187,42 @@ public class NodeLayer implements VisorLayer, DataSourceListener {
           g.drawOval((int)(converter.lonToViewX(link.from.lon)-nsize/2), (int)(converter.latToViewY(link.from.lat)-nsize/2), (int)(nsize), (int)(nsize));
           g.setStroke(linkStroke);
         } else {
-          float green = 1;
-          if (link.HNA || (link.etx < 0)) {
-            g.setColor(activeblue);
-          } else if (link.etx<1) {
-            g.setColor(activewhite);
+          if (packets>0) { 
+            float value=0.000005f * (float)Math.log(packets);
+            linkStroke = new BasicStroke((float)Math.min(15,value * scale), BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
+            int proto=link.getI("protocol");
+            switch (proto) {
+              case 1: {    /*ICMP */
+                g.setColor(activegreen);
+                break;
+              }
+              case 6: {    /*TCP */
+                g.setColor(transred);
+                break;
+              }
+              case 17: {    /*UDP */
+                g.setColor(transyellow);
+                break;
+              }
+              case 41: {    /*IPv6 */
+                g.setColor(activeblue);
+                break;
+              }
+              default: {   /* UNDEFINED or OTHER*/
+                g.setColor(activewhite);
+                break;
+              }
+            }
           } else {
-            green=1/link.etx;
-            g.setColor(new Color(1-green, green, 0.5f, currentalpha/255.0f));
+            float green = 1;
+            if (link.HNA || (link.etx < 0)) {
+              g.setColor(activeblue);
+            } else if (link.etx<1) {
+              g.setColor(activewhite);
+            } else {
+              green=1/link.etx;
+              g.setColor(new Color(1-green, green, 0.5f, currentalpha/255.0f));
+            }
           }
           if ((link.from.lat != link.from.DEFAULT_LAT) && (link.to.lat != link.to.DEFAULT_LAT)) {//ignore links to truly unlocated nodes (at default position)
             g.setStroke(linkStroke);
@@ -232,6 +263,7 @@ public class NodeLayer implements VisorLayer, DataSourceListener {
         }
       }
       double nsize = Math.max(1,Math.min(8,Math.round(0.0003 * scale)));
+      if (node.unlocated) nsize = Math.max(1,Math.min(8,Math.round(0.0001 * scale)));
       double nx = converter.lonToViewX(node.lon) - nsize/2,
              ny = converter.latToViewY(node.lat) - nsize/2;
              
@@ -241,12 +273,12 @@ public class NodeLayer implements VisorLayer, DataSourceListener {
           node.lon=node.lonsum / node.nc;
           node.lat=node.latsum / node.nc;
         } else if (node.nc == 1) {
-          node.lon=node.lonsum + 0.0003;
-          node.lat=node.latsum + 0.0003;
+          node.lon=node.lonsum + 0.00003;
+          node.lat=node.latsum + 0.00003;
         } /*else {
           System.err.println("Node unlocated with no neighbours: "+node.id);
         }*/
-        node.lonsum=0; node.latsum=0; node.nc=0;
+        /*node.lonsum=0; node.latsum=0; node.nc=0;*/
       }
     }
 
@@ -294,9 +326,11 @@ public class NodeLayer implements VisorLayer, DataSourceListener {
           label = "Node: "+selectedNode.fqid;
         	boxw = Math.max(180, g.getFontMetrics(VisorFrame.mainfont).stringWidth(label)+20);
 
-          Float favail = availmap.get(selectedNode.id);
-	  String savail=(favail==null)?"N/A":Math.round(favail.floatValue()*100)+"%";
-	  infos.add ("Availability: "+savail);
+          if (availmap!=null) {
+            Float favail = availmap.get(selectedNode.id);
+	          String savail=(favail==null)?"N/A":Math.round(favail.floatValue()*100)+"%";
+	          infos.add ("Availability: "+savail);
+          }
 
           Iterator<String> atts=selectedNode.attributes.keySet().iterator();
           while (atts.hasNext()) {

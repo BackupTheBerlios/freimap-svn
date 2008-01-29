@@ -25,7 +25,8 @@ import org.xml.sax.SAXException;
  */
 public class FreifunkMapDataSource implements DataSource {
 
-	Vector<FreiNode> nodes = new Vector<FreiNode>();
+  Vector<FreiNode> nodes = new Vector<FreiNode>();
+  HashMap<String, FreiNode> nodeByName = new HashMap<String, FreiNode>();
 
   public void init(HashMap<String, Object> configuration) {
     String sServerURL = null;
@@ -108,12 +109,14 @@ public class FreifunkMapDataSource implements DataSource {
           FreiNode nnode = new FreiNode(oneip, tooltip, Double.parseDouble(splitCoords[1]), Double.parseDouble(splitCoords[0]));
           if (height!=null) nnode.attributes.put("height", new Integer(Integer.parseInt(height)));
           nodes.add(nnode);
+          nodeByName.put(nnode.id, nnode);
         }
         continue;
       } 
       FreiNode nnode = new FreiNode(ip, tooltip, Double.parseDouble(splitCoords[1]), Double.parseDouble(splitCoords[0]));
       if (height!=null) nnode.attributes.put("height", new Integer(Integer.parseInt(height)));
       nodes.add(nnode);
+      nodeByName.put(nnode.id, nnode);
     }
   }
 
@@ -147,9 +150,15 @@ public class FreifunkMapDataSource implements DataSource {
 	}
 
   public FreiNode getNodeByName(String id) {
-    // TODO: Implement me.
-    return null;
+    return nodeByName.get(id);
   }
+
+  public void addNode(FreiNode node) {
+    nodes.remove(node); //just in case
+    nodes.add(node);
+    nodeByName.put(node.id, node);
+  }
+
 
 	public void getLinkCountProfile(FreiNode node, NodeInfo info) {
 		// TODO: Implement me.

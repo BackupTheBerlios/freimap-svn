@@ -48,16 +48,17 @@ public class FlowDataSource implements DataSource {
 /** Initialize this data source with its configuration parameters. **/
   public void init(HashMap<String, Object> conf) {
     //reading config
-    host = Configurator.getS("flow.mysql.host", conf);
-    port = Configurator.getI("flow.mysql.port", conf);
-    db   = Configurator.getS("flow.mysql.db",   conf);
-    user = Configurator.getS("flow.mysql.user", conf);
-    pass = Configurator.getS("flow.mysql.pass", conf);
+    host = Configurator.getS("host", conf);
+    //port = Configurator.getI("port", conf);
+    db   = Configurator.getS("db",   conf);
+    user = Configurator.getS("user", conf);
+    pass = Configurator.getS("pass", conf);
 
-    sNodeSource = Configurator.getS("flow.nodesource", conf);
+    sNodeSource = Configurator.getS("nodesource", conf);
 
     if (sNodeSource == null) {
-      System.err.println("FlowDataSource must have a parameter flow.nodesource");
+      System.err.println(conf);
+      System.err.println("FlowDataSource must have a parameter nodesource");
       System.exit(1);
     }
     /*do more dummy checks here*/
@@ -79,9 +80,12 @@ public class FlowDataSource implements DataSource {
       System.out.print("[netflow] fetching basic information.. ");
       Statement s = conn.createStatement();
       ResultSet r = s.executeQuery("select unix_timestamp(min(FLOW_BEGIN)) as first, unix_timestamp(max(FLOW_END)) as last from FLOWS");
-      firstUpdate = r.getLong("first");
-      lastUpdate  = r.getLong("last");
-
+      if (r.next()) {
+        firstUpdate = r.getLong("first");
+        lastUpdate  = r.getLong("last");
+      } else {
+        System.err.println("No data in flowdb");
+      }
     } catch (Exception ex) {
       ex.printStackTrace(); //debug
       System.exit(1);
@@ -182,10 +186,11 @@ public class FlowDataSource implements DataSource {
 
   public Vector<FreiLink> getLinks(long time) {
     Vector<FreiLink> linkList=new Vector<FreiLink>();
+    HashMap<String, HashMap<String, FreiLink>> linkByName = new HashMap<String, HashMap<String, FreiLink>>();
     if ((time<=0) /* || (time>MAX_UNIX_TIME)*/ ) return linkList; //empty
     try {
       Statement s = conn.createStatement();
-      ResultSet r = s.executeQuery("SELECT HIGH_PRIORITY * from FLOWDB where FLOW_BEGIN<from_unixtime("+time+") and FLOW_END>from_unixtime("+time+")");
+      ResultSet r = s.executeQuery("SELECT HIGH_PRIORITY * from FLOWS where FLOW_BEGIN<from_unixtime("+time+") and FLOW_END>from_unixtime("+time+")");
       while (r.next()) {
         String src   = r.getString("SOURCE_IP");
         int    sport = r.getInt("SOURCE_PORT");
@@ -198,16 +203,22 @@ public class FlowDataSource implements DataSource {
         Object dstn=nodeSource.getNodeByName(dest);
         if (srcn==null) { //enable real-time interpolation
           srcn=new FreiNode(src);
-          ((MysqlDataSource)nodeSource).addNode((FreiNode)srcn);
+          ((FreifunkMapDataSource)nodeSource).addNode((FreiNode)srcn);
           if (listener!=null) listener.nodeListUpdate((FreiNode)srcn);
         }
         if (dstn==null) {
           dstn=new FreiNode(dest);
-          ((MysqlDataSource)nodeSource).addNode((FreiNode)dstn);
+          ((FreifunkMapDataSource)nodeSource).addNode((FreiNode)dstn);
           if (listener!=null) listener.nodeListUpdate((FreiNode)dstn);
         }
         if ((srcn!=null) && (dstn!=null)) {
-          FreiLink link=new FreiLink((FreiNode)srcn, (FreiNode)dstn, 1);
+          HashMap<String, FreiLink> temp=linkByName.get(src);
+          FreiLink link=(temp==null)?null:temp.get(dest);
+          if (link==null) link=new FreiLink((FreiNode)srcn, (FreiNode)dstn, 1);
+          int pp = link.getI("packets"); 
+          proto = pp>packs?link.getI("proto"):proto;
+          packs += pp;
+          bytes += link.getI("bytes");
           link.addAttribute("packets", new Integer(packs));
           link.addAttribute("bytes", new Integer(bytes));
           link.addAttribute("protocol", new Integer(proto));
@@ -263,7 +274,7 @@ public class FlowDataSource implements DataSource {
       try {
         while (true) {
           Statement s = conn2.createStatement();
-          ResultSet r = s.executeQuery("select unix_timestamp(TIME_RECEIVED) as stamp from FLOWS group by TIME_RECEIVED limit "+OFFSET+" offset "+offset);
+          ResultSet r = s.executeQuery("select unix_timestamp(FLOW_BEGIN) as stamp from FLOWS group by FLOW_BEGIN limit "+OFFSET+" offset "+offset);
           boolean hasResults=false; 
           long stamp=0;
           while (r.next()) {
