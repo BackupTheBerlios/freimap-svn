@@ -27,8 +27,10 @@ import java.util.HashMap;
 public class FreiLink {
   public FreiNode from, to;
   public float etx=-1, lq=-1, nlq=-1;
+  /* optional fields*/
+  public long  packets=0, bytes=0; 
+  public long  tcp=0, udp=0, icmp=0, other=0;
   public boolean HNA=false;
-  public HashMap<String, Object> attributes;
 
   public FreiLink(FreiNode from, FreiNode to, float lq, float nlq, boolean HNA) {
     this.from = from;
@@ -47,16 +49,15 @@ public class FreiLink {
     this.etx=etx;
     this.HNA=HNA;
   }
-  public void addAttribute(String key, Object value) {
-    if (attributes==null) attributes=new HashMap<String, Object>();
-    attributes.put(key, value);
+  public void setPacketCounts(long packets, long bytes, long icmp, long tcp, long udp, long other) {
+    this.packets= packets;
+    this.bytes  = bytes;
+    this.icmp   = icmp;
+    this.tcp    = tcp;
+    this.udp    = udp;
+    this.other  = other;
   }
-  public int getI(String key) {
-    if (attributes==null) return 0;
-    Object o=attributes.get(key);
-    return (o==null)?0:((Integer)o).intValue();
-  }
-
+  
   public int hashCode() {
     return from.hashCode() ^ to.hashCode();
   }

@@ -74,8 +74,10 @@ public class NodeLayer implements VisorLayer, DataSourceListener {
                activeyellow = Color.yellow,
                activegreen = Color.green,
                activewhite = Color.white,
-               transred =    Color.red,
-               transyellow = Color.yellow;
+               transred    = new Color(255,0,0,127),
+               transgreen  = new Color(0,255,0,127),
+               transyellow = new Color(255,255,0,127),
+               transwhite  = new Color(255,255,255,127);
   public int   currentalpha = 255;
   //ColorScheme cs = ColorScheme.NO_MAP;
 
@@ -178,7 +180,6 @@ public class NodeLayer implements VisorLayer, DataSourceListener {
     if ((links != null) && (links.size()>0)) {
       for(int i = 0; i < links.size(); i++) {
         FreiLink link = links.elementAt(i);
-        float packets=link.getI("packets");
         boolean isneighbourlink = (link.from.equals(selectedNode)||link.to.equals(selectedNode));
         if (link.to.equals(uplink)) {
           g.setColor(activeblue);
@@ -186,34 +187,26 @@ public class NodeLayer implements VisorLayer, DataSourceListener {
           double nsize = Math.min(25,Math.round(0.0015 * scale));
           g.drawOval((int)(converter.lonToViewX(link.from.lon)-nsize/2), (int)(converter.latToViewY(link.from.lat)-nsize/2), (int)(nsize), (int)(nsize));
           g.setStroke(linkStroke);
+        } else if (link.packets>0) { 
+          if ((link.from.lat != link.from.DEFAULT_LAT) && (link.to.lat != link.to.DEFAULT_LAT)) {//ignore links to truly unlocated nodes (at default position)
+              float value=0.000005f * (float)Math.log(link.packets);
+              linkStroke = new BasicStroke((float)Math.min(15,value * scale), BasicStroke.CAP_BUTT, BasicStroke.JOIN_ROUND);
+              g.setStroke(linkStroke);
+              double ratiotcp   = (double)link.tcp / (double)link.packets;
+              double ratioudp   = (double)link.udp / (double)link.packets + ratiotcp;
+              double ratioicmp  = (double)link.icmp / (double)link.packets + ratioudp;
+              double ratioother = (double)link.other / (double)link.packets + ratioicmp;
+              g.setColor(transred);
+              drawLineSeg(g, link.from.lon, link.from.lat, link.to.lon, link.to.lat, 0.0, ratiotcp);
+              g.setColor(transyellow);
+              drawLineSeg(g, link.from.lon, link.from.lat, link.to.lon, link.to.lat, ratiotcp, ratioudp);
+              g.setColor(transgreen);
+              drawLineSeg(g, link.from.lon, link.from.lat, link.to.lon, link.to.lat, ratioudp, ratioicmp);
+              g.setColor(transwhite);
+              drawLineSeg(g, link.from.lon, link.from.lat, link.to.lon, link.to.lat, ratioicmp, 1.0f);
+          }
         } else {
-          if (packets>0) { 
-            float value=0.000005f * (float)Math.log(packets);
-            linkStroke = new BasicStroke((float)Math.min(15,value * scale), BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
-            int proto=link.getI("protocol");
-            switch (proto) {
-              case 1: {    /*ICMP */
-                g.setColor(activegreen);
-                break;
-              }
-              case 6: {    /*TCP */
-                g.setColor(transred);
-                break;
-              }
-              case 17: {    /*UDP */
-                g.setColor(transyellow);
-                break;
-              }
-              case 41: {    /*IPv6 */
-                g.setColor(activeblue);
-                break;
-              }
-              default: {   /* UNDEFINED or OTHER*/
-                g.setColor(activewhite);
-                break;
-              }
-            }
-          } else {
+          if ((link.from.lat != link.from.DEFAULT_LAT) && (link.to.lat != link.to.DEFAULT_LAT)) {//ignore links to truly unlocated nodes (at default position)
             float green = 1;
             if (link.HNA || (link.etx < 0)) {
               g.setColor(activeblue);
@@ -223,24 +216,22 @@ public class NodeLayer implements VisorLayer, DataSourceListener {
               green=1/link.etx;
               g.setColor(new Color(1-green, green, 0.5f, currentalpha/255.0f));
             }
-          }
-          if ((link.from.lat != link.from.DEFAULT_LAT) && (link.to.lat != link.to.DEFAULT_LAT)) {//ignore links to truly unlocated nodes (at default position)
             g.setStroke(linkStroke);
             if (isneighbourlink) g.setStroke(linkStrokeThick);
             g.drawLine(converter.lonToViewX(link.from.lon), converter.latToViewY(link.from.lat), converter.lonToViewX(link.to.lon), converter.latToViewY(link.to.lat));
           }
-          if (link.to.unlocated && (link.from.lat != link.from.DEFAULT_LAT)) {
-            double netx = (link.etx<1)?0d:1d/link.etx;
-            link.to.lonsum+=link.from.lon*netx;
-            link.to.latsum+=link.from.lat*netx;
-            link.to.nc+= netx;
-          }
-          if (link.from.unlocated && (link.to.lat != link.to.DEFAULT_LAT)) {
-            double netx = (link.etx<1)?0d:1d/link.etx;
-            link.from.lonsum+=link.to.lon * netx;
-            link.from.latsum+=link.to.lat * netx;
-            link.from.nc+= netx;
-          }
+        }
+        if (link.to.unlocated && (link.from.lat != link.from.DEFAULT_LAT)) {
+          double netx = (link.etx<1)?0d:1d/link.etx;
+          link.to.lonsum+=link.from.lon*netx;
+          link.to.latsum+=link.from.lat*netx;
+          link.to.nc+= netx;
+        }
+        if (link.from.unlocated && (link.to.lat != link.to.DEFAULT_LAT)) {
+          double netx = (link.etx<1)?0d:1d/link.etx;
+          link.from.lonsum+=link.to.lon * netx;
+          link.from.latsum+=link.to.lat * netx;
+          link.from.nc+= netx;
         }
       }
     }
@@ -263,7 +254,7 @@ public class NodeLayer implements VisorLayer, DataSourceListener {
         }
       }
       double nsize = Math.max(1,Math.min(8,Math.round(0.0003 * scale)));
-      if (node.unlocated) nsize = Math.max(1,Math.min(8,Math.round(0.0001 * scale)));
+      if (node.unlocated) nsize = Math.max(1,Math.min(4,Math.round(0.0001 * scale)));
       double nx = converter.lonToViewX(node.lon) - nsize/2,
              ny = converter.latToViewY(node.lat) - nsize/2;
              
@@ -359,12 +350,13 @@ public class NodeLayer implements VisorLayer, DataSourceListener {
 
           label = "Link: "+selectedLink.toString();
 
-          if (selectedLink.attributes != null) {
-            Iterator<String> atts=selectedLink.attributes.keySet().iterator();
-            while (atts.hasNext()) {
-              String key = atts.next();
-              infos.add(key+": "+selectedLink.attributes.get(key));
-            }
+          if (selectedLink.packets > 0) {
+            infos.add("packets: "+selectedLink.packets);
+            infos.add("bytes  : "+selectedLink.bytes);
+            infos.add("icmp   : "+selectedLink.icmp);
+            infos.add("tcp    : "+selectedLink.tcp);
+            infos.add("udp    : "+selectedLink.udp);
+            infos.add("other  : "+selectedLink.other);
           }
 
           LinkInfo info = linkinfo.get(selectedLink);
@@ -385,34 +377,41 @@ public class NodeLayer implements VisorLayer, DataSourceListener {
 
         // Put box at fixed location.
         double boxx = w - 10 - boxw / 2;
-        double boxy = 100;
+        double boxy = 80;
 
-               double labelh = g.getFontMetrics(VisorFrame.mainfont).getHeight(),
-	       infoh = g.getFontMetrics(smallerfont).getHeight(),
-               boxh = labelh + infoh * infos.size() + 10;
-
+        double labelh = g.getFontMetrics(VisorFrame.mainfont).getHeight(),
+        infoh = g.getFontMetrics(smallerfont).getHeight(),
+        boxh = labelh + infoh * infos.size() + 10;
 
 	    // Connect with the bottom line of the box.
-		g.draw(new Line2D.Double(nx, ny, boxx, boxy+boxh/2));
+    		g.draw(new Line2D.Double(nx, ny, boxx, boxy+boxh));
 
-        Shape box = new RoundRectangle2D.Double(boxx-boxw/2, boxy-boxh/2, boxw, boxh, 10, 10);
+        Shape box = new RoundRectangle2D.Double(boxx-boxw/2, boxy, boxw, boxh, 10, 10);
         Color mybgcolor = showNodeInfo?bgcolor:bgcolor2;
-	Color myfgcolor = showNodeInfo?fgcolor:fgcolor2;
-	g.setPaint(mybgcolor);
-    	g.fill(box); 
+	      Color myfgcolor = showNodeInfo?fgcolor:fgcolor2;
+	      g.setPaint(mybgcolor);
+    	  g.fill(box); 
         g.setPaint(myfgcolor);
-    	g.draw(box);
-	g.setColor(showNodeInfo?activegreen:activeblue); 
+    	  g.draw(box);
+	      g.setColor(showNodeInfo?activegreen:activeblue); 
         g.setFont(VisorFrame.mainfont);
-	g.drawString(label, (int)(boxx - boxw/2 + 10), (int)(boxy - boxh/2 + labelh));
-	g.setColor(myfgcolor); 
-	g.setFont(smallerfont);
-	for (int i=0; i<infos.size(); i++) {
-		g.drawString(infos.elementAt(i), (int)(boxx - boxw/2 + 10), (int)(boxy - boxh/2 + labelh + infoh*i + 15));
-	}
+      	g.drawString(label, (int)(boxx - boxw/2 + 10), (int)(boxy + labelh));
+	      g.setColor(myfgcolor); 
+	      g.setFont(smallerfont);
+	      for (int i=0; i<infos.size(); i++) {
+		      g.drawString(infos.elementAt(i), (int)(boxx - boxw/2 + 10), (int)(boxy + labelh + infoh*i + 15));
+	      }
     }
 
 
+  }
+
+  private void drawLineSeg(Graphics2D g, double lon1, double lat1, double lon2, double lat2, double r1, double r2) {
+    int x1 = converter.lonToViewX(lon1 + (lon2-lon1)*r1);
+    int x2 = converter.lonToViewX(lon1 + (lon2-lon1)*r2);
+    int y1 = converter.latToViewY(lat1 + (lat2-lat1)*r1);
+    int y2 = converter.latToViewY(lat1 + (lat2-lat1)*r2);
+    g.drawLine(x1,y1,x2,y2);
   }
 
   public FreiNode getSelectedNode() {

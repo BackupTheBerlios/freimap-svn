@@ -35,7 +35,7 @@ public class FlowDataSource implements DataSource {
   String host, user, pass, db;
   int port;
 
-  Connection conn, conn2;
+  Connection conn, conn2, conn3;
 
   private LinkedList<Long> updateTimes=new LinkedList<Long>(); 
   long firstUpdate = 1,
@@ -71,6 +71,7 @@ public class FlowDataSource implements DataSource {
       conn = DriverManager.getConnection(odbcurl, user, pass);
 
       conn2 = DriverManager.getConnection(odbcurl, user, pass); //second concurrent connection for background data fetching
+      conn3 = DriverManager.getConnection(odbcurl, user, pass); //third concurrent connection for background profile fetching
       System.out.println("done. [/netflow]");
 
       //initializing background data fetching
@@ -197,8 +198,9 @@ public class FlowDataSource implements DataSource {
         String dest= r.getString("DEST_IP");
         int    dport = r.getInt("DEST_PORT");
         int    proto = r.getInt("PROTOCOL");
-        int    packs = r.getInt("PACKETS");
-        int    bytes = r.getInt("BYTES");
+        long   packs = r.getLong("PACKETS");
+        long   bytes = r.getLong("BYTES");
+        if (src.equals(dest)) continue;
         Object srcn=nodeSource.getNodeByName(src);
         Object dstn=nodeSource.getNodeByName(dest);
         if (srcn==null) { //enable real-time interpolation
@@ -215,13 +217,26 @@ public class FlowDataSource implements DataSource {
           HashMap<String, FreiLink> temp=linkByName.get(src);
           FreiLink link=(temp==null)?null:temp.get(dest);
           if (link==null) link=new FreiLink((FreiNode)srcn, (FreiNode)dstn, 1);
-          int pp = link.getI("packets"); 
-          proto = pp>packs?link.getI("proto"):proto;
-          packs += pp;
-          bytes += link.getI("bytes");
-          link.addAttribute("packets", new Integer(packs));
-          link.addAttribute("bytes", new Integer(bytes));
-          link.addAttribute("protocol", new Integer(proto));
+          link.packets += packs;
+          link.bytes   += bytes;
+          switch (proto) {
+            case 1: {
+              link.icmp += packs;
+              break;
+            }
+            case 6: {
+              link.tcp += packs;
+              break;
+            }
+            case 17: {
+              link.udp += packs;
+              break;
+            }
+            default: {
+              link.other += packs;
+              break;
+            }
+          }
           linkList.remove(link);
           linkList.add(link);
         }
@@ -244,7 +259,7 @@ public class FlowDataSource implements DataSource {
     @param  info  A LinkInfo structure to be filled with this information. 
 */
   public void getLinkProfile(FreiLink link, LinkInfo info) {
-    return;
+    new LPFetcher(link, info).start();
   }
 /** Extendend node information is requested using this method. 
     @param  node  the node on which information is sought
@@ -259,6 +274,37 @@ public class FlowDataSource implements DataSource {
     try {
       Thread.sleep(100); //sleep to allow a few time stamps to load. this is a hack, indeed.
     } catch (InterruptedException ex) {}
+  }
+
+  class LPFetcher extends Thread {
+    FreiLink link;
+    LinkInfo linkinfo;
+
+    public LPFetcher(FreiLink link, LinkInfo linkinfo) {
+      this.link=link;
+      this.linkinfo=linkinfo;
+    }
+
+    public void run() {
+      LinkedList<FlowData> lp=new LinkedList<FlowData>();
+      try {
+        Statement s = conn3.createStatement();
+        ResultSet r = s.executeQuery("select HIGH_PRIORITY unix_timestamp(FLOW_BEGIN) as begin, unix_timestamp(FLOW_END) as end, PACKETS as packets, BYTES as bytes, PROTOCOL as protocol from FLOWS where SOURCE_IP='"+link.from.id+"' and DEST_IP='"+link.to.id+"' ORDER BY FLOW_BEGIN");
+        while (r.next()) {
+          long begin   = r.getLong("begin");
+          long end     = r.getLong("end");
+          long packets = r.getLong("packets");
+          long bytes   = r.getLong("bytes");
+          int  proto   = r.getInt ("protocol");
+          lp.add(new FlowData(begin, end, packets, bytes, proto));
+        }
+      } catch (Exception ex) {
+        ex.printStackTrace();
+        linkinfo.status=linkinfo.STATUS_FAILED;
+        return;
+      }
+      linkinfo.setFlowProfile(lp);
+    }
   }
 
   class TimeStampFetcher implements Runnable { //use an own connection for concurrency!

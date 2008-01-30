@@ -28,6 +28,7 @@ import org.jfree.chart.*;
 import org.jfree.chart.axis.*;
 import org.jfree.chart.plot.*;
 import org.jfree.chart.title.*;
+import org.jfree.chart.renderer.xy.*;
 import org.jfree.data.xy.*;
 
 public class LinkInfo {
@@ -96,11 +97,107 @@ public class LinkInfo {
     status = STATUS_AVAILABLE;
   }
 
+  public void setFlowProfile(LinkedList<FlowData> lp) {
+
+    XYSeries packets = new XYSeries("packets");
+    XYSeries bytes   = new XYSeries("bytes");
+    XYSeries icmp    = new XYSeries("icmp");
+    XYSeries tcp     = new XYSeries("tcp");
+    XYSeries udp     = new XYSeries("udp");
+    XYSeries other   = new XYSeries("other");
+
+    XYSeriesCollection data1 = new XYSeriesCollection(bytes);
+    XYSeriesCollection data2 = new XYSeriesCollection(packets);
+    XYSeriesCollection data3 = new XYSeriesCollection(icmp);
+    data3.addSeries(tcp);
+    data3.addSeries(udp);
+    data3.addSeries(other);
+
+    //linkChart = ChartFactory.createXYLineChart("packets, bytes\r\nicmp, tcp, udp other", "time", "count", data1, PlotOrientation.VERTICAL, false, false, false);
+    ValueAxis domain = new DateAxis();
+    ValueAxis range1 = new NumberAxis();
+    ValueAxis range2 = new NumberAxis();
+    ValueAxis range3 = new NumberAxis();
+    CombinedDomainXYPlot plot = new CombinedDomainXYPlot(domain);
+    plot.add(new XYPlot(data2,domain,range1,new XYLineAndShapeRenderer(true, false)));
+    plot.add(new XYPlot(data1,domain,range2,new XYLineAndShapeRenderer(true, false)));
+    plot.add(new XYPlot(data3,domain,range1,new XYLineAndShapeRenderer(true, false)));
+    linkChart = new JFreeChart(plot);
+    linkChart.setTitle("");
+    sexupLayout(linkChart);
+
+    long min=lp.getFirst().begin,
+         max =lp.getLast().end;
+
+    for (float i=0.0f; i<1000.0f; i+=1.0f) {
+      long cur = min + (long)((max-min)*(i/1000.0));
+
+      long cpackets = 0;
+      long cbytes   = 0;
+      long cicmp    = 0; 
+      long ctcp     = 0;
+      long cudp     = 0;
+      long cother   = 0;
+
+      Iterator<FlowData> li=lp.iterator();
+      while (li.hasNext()) {
+        FlowData data=li.next();
+        if (data.begin>cur) break;
+        if (data.end<cur) continue;
+        cpackets+=data.packets;
+        cbytes  +=data.bytes;
+        switch (data.protocol) {
+          case 1: {
+            cicmp += data.packets;
+            break;
+          }
+          case 6: {
+            ctcp += data.packets;
+            break;
+          }
+          case 17: {
+            cudp += data.packets;
+            break;
+          }
+          default: {
+            cother += data.packets;
+            break;
+          }
+        }
+      }
+
+      packets.add(cur, cpackets);
+      bytes.add  (cur, cbytes);
+      icmp.add   (cur, cicmp);
+      tcp.add    (cur, ctcp);
+      udp.add    (cur, cudp);
+      other.add  (cur, cother);
+    }
+
+    status = STATUS_AVAILABLE;
+  }
+
   private void sexupAxis(ValueAxis axis) {
     axis.setLabelFont(VisorFrame.smallerfont);
     axis.setLabelPaint(VisorFrame.fgcolor2);
     axis.setTickLabelFont(VisorFrame.smallerfont);
     axis.setTickLabelPaint(VisorFrame.fgcolor2);
+  }
+  private void sexupPlot(Plot plot) {
+    if (plot instanceof CombinedDomainXYPlot) {
+      List<Plot> subs = (List<Plot>)(((CombinedDomainXYPlot)plot).getSubplots());
+      Iterator<Plot> i = subs.iterator();
+      while (i.hasNext()) {
+        Plot p = i.next();
+        sexupPlot(p);
+      }
+    } else if (plot instanceof XYPlot) {
+      XYPlot xyplot=(XYPlot)plot;
+      xyplot.setBackgroundPaint(VisorFrame.bgcolor2);
+      xyplot.setDomainAxis(new DateAxis());
+      sexupAxis(xyplot.getDomainAxis());
+      sexupAxis(xyplot.getRangeAxis());
+    }
   }
   private void sexupLayout(JFreeChart chart) {
     chart.setAntiAlias(true);
@@ -109,10 +206,7 @@ public class LinkInfo {
     TextTitle title=chart.getTitle();
     title.setFont(VisorFrame.smallerfont);
     title.setPaint(VisorFrame.fgcolor2);
-    XYPlot plot=chart.getXYPlot();
-    plot.setBackgroundPaint(VisorFrame.bgcolor2);
-    plot.setDomainAxis(new DateAxis());
-    sexupAxis(plot.getDomainAxis());
-    sexupAxis(plot.getRangeAxis());
+    Plot plot=chart.getPlot();
+    sexupPlot(plot);
   }
 }
